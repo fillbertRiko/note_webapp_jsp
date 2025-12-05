@@ -46,7 +46,7 @@ public class UserDao {
 			ResultSet rs = rsRead.executeQuery();
 			while (rs.next()) {
 				user = new User(rs.getInt("id"), rs.getString("username"), rs.getString("password"),
-						rs.getString("fullname"), rs.getString("email"), rs.getInt("age"));
+						rs.getString("fullname"), rs.getString("email"), rs.getDate("created_at"));
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -63,7 +63,7 @@ public class UserDao {
 			ResultSet rs = ps.executeQuery();
 			while (rs.next()) {
 				User user = new User(rs.getInt("id"), rs.getString("username"), rs.getString("password"),
-						rs.getString("fullname"), rs.getString("email"), rs.getInt("age"));
+						rs.getString("fullname"), rs.getString("email"), rs.getDate("created_at"));
 				users.add(user);
 			}
 		} catch (SQLException e) {
@@ -79,7 +79,7 @@ public class UserDao {
 			ustmt.setString(2, user.getUsername());
 			ustmt.setString(3, user.getEmail());
 			ustmt.setString(4, user.getPassword());
-			ustmt.setInt(5, user.getAge());
+			ustmt.setDate(5, user.getTimeCreate());
 			rowUpdated = ustmt.executeUpdate() > 0;
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -95,7 +95,7 @@ public class UserDao {
 			cstmt.setString(2, user.getFullname());
 			cstmt.setString(3, user.getPassword());
 			cstmt.setString(4, user.getEmail());
-			cstmt.setInt(5, user.getAge());
+			cstmt.setDate(5, user.getTimeCreate());
 			cstmt.executeUpdate();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -113,5 +113,24 @@ public class UserDao {
 			return false;
 		}
 		return rowDeleted;
+	}
+
+	public User getUserByUsernameAndPassword(String username, String password) {
+		User user = null;
+		String SELECT_USER_BY_USERNAME_AND_PASSWORD = "SELECT * FROM user WHERE username = ? AND password = ?";
+		try (conn) {
+			PreparedStatement ps = conn.prepareStatement(SELECT_USER_BY_USERNAME_AND_PASSWORD);
+			ps.setString(1, username);
+			ps.setString(2, password);
+			System.out.println(ps);
+			ResultSet rs = ps.executeQuery();
+			if (rs.next()) {
+				user = new User(rs.getInt("id"), rs.getString("username"), rs.getString("password"),
+						rs.getString("fullname"), rs.getString("email"), rs.getDate("created_at"));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return user;
 	}
 }
