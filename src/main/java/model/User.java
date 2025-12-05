@@ -1,33 +1,36 @@
 package model;
 
+import java.sql.Date;
+
 public class User {
 	protected int id;
 	protected String username;
 	protected String password;
 	protected String fullname;
 	protected String email;
-	protected int age;
+	protected String hobbies;
+	protected Date created_at;
 
 	public User() {
 	}
 
-	public User(String username, String password, String fullname, String email, int age) {
+	public User(String username, String password, String fullname, String email, Date created_at) {
 		super();
 		this.username = username;
 		this.password = password;
 		this.fullname = fullname;
 		this.email = email;
-		this.age = age;
+		this.created_at = created_at;
 	}
 	
-	public User(int id, String username, String password, String fullname, String email, int age) {
+	public User(int id, String username, String password, String fullname, String email, Date created_at) {
 		super();
 		this.id = id;
 		this.username = username;
 		this.password = password;
 		this.fullname = fullname;
 		this.email = email;
-		this.age = age;
+		this.created_at = created_at;
 	}
 	
 	public int getId() {
@@ -70,11 +73,11 @@ public class User {
 		this.password = password;
 	}
 	
-	public int getAge() {
-		return age;
+	public Date getTimeCreate() {
+		return created_at;
 	}
 	
-	public void setAge(int age) {
-		this.age = age;
+	public void setTimeCreate(Date created_at) {
+		this.created_at = created_at;
 	}
 }
