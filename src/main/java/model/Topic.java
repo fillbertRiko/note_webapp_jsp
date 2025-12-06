@@ -2,18 +2,21 @@ package model;
 
 import java.sql.Date;
 
-public class DiaryEntry {
+///Class topic de them chieu voi model danh muc
+///tao getter va setter 
+///cac ham ket noi voi model thong qua goi ham
+public class Topic {
 	protected int id;
 	protected int user_id;
 	protected String name;
 	protected String description;
 	protected Date created_at;
 	
-	public DiaryEntry() {
+	public Topic() {
 		
 	}
 	
-	public DiaryEntry(int id, int user_id, String name, String description, Date created_at) {
+	public Topic(int id, int user_id, String name, String description, Date created_at) {
 		super();
 		this.id = id;
 		this.user_id = user_id;

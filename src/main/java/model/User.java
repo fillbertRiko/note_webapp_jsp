@@ -2,6 +2,11 @@ package model;
 
 import java.sql.Date;
 
+
+///Class the hien model nguoi dung 
+///tao cac getter va setter
+///lam viec truc tiep voi DB de lay thong tin ve cho controller
+///mapping lai du lieu de gui cho DB 
 public class User {
 	protected int id;
 	protected String username;
