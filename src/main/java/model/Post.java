@@ -3,21 +3,21 @@ package model;
 import java.sql.Date;
 
 public class Post {
-	private int id;
-	private int user_id;
-	private int topic_id;
+	private String id;
+	private String user_id;
+	private String topic_id;
 	private String title;
 	private String content;
 	private Date created_at;
 	private Date updated_at;
-	private int access_level_id;
-	private int allow_comment;
+	private String access_level_id;
+	private String allow_comment;
 
 	public Post() {
 		
 	}
 
-	public Post(int id, int user_id, int topic_id, String title, String content, Date created_at, Date updated_at, int access_level_id, int allow_comment) {
+	public Post(String id, String user_id, String topic_id, String title, String content, Date created_at, Date updated_at, String access_level_id, String allow_comment) {
 		super();
 		this.id = id;
 		this.user_id = user_id;
@@ -30,27 +30,27 @@ public class Post {
 		this.allow_comment = allow_comment;
 	}
 	
-	public int getId() {
+	public String getId() {
 		return id;
 	}
 	
-	public void setId(int id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 	
-	public int getUserId() {
+	public String getUserId() {
 		return user_id;
 	}
 	
-	public void setUserId(int user_id) {
+	public void setUserId(String user_id) {
 		this.user_id = user_id;
 	}
 	
-	public int getTopicId() {
+	public String getTopicId() {
 		return topic_id;
 	}
 	
-	public void setTopicId(int topic_id) {
+	public void setTopicId(String topic_id) {
 		this.topic_id = topic_id;
 	}
 	
@@ -86,19 +86,19 @@ public class Post {
 		this.updated_at = updated_at;
 	}
 	
-	public int getAccessLevelId() {
+	public String getAccessLevelId() {
 		return access_level_id;
 	}
 	
-	public void setAccessLevelId(int access_level_id) {
+	public void setAccessLevelId(String access_level_id) {
 		this.access_level_id = access_level_id;
 	}
 	
-	public int getNumberAllowComment() {
+	public String getNumberAllowComment() {
 		return allow_comment;
 	}
 	
-	public void setNumberAllowComment(int allow_comment) {
+	public void setNumberAllowComment(String allow_comment) {
 		this.allow_comment = allow_comment;
 	}
 }

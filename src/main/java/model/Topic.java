@@ -5,9 +5,10 @@ import java.sql.Date;
 ///Class topic de them chieu voi model danh muc
 ///tao getter va setter 
 ///cac ham ket noi voi model thong qua goi ham
+///nen luu id theo dang chuoi de tranh viec xung dot view/controller vi dang su dung mongodb
 public class Topic {
-	protected int id;
-	protected int user_id;
+	protected String id;
+	protected String user_id;
 	protected String name;
 	protected String description;
 	protected Date created_at;
@@ -16,7 +17,7 @@ public class Topic {
 		
 	}
 	
-	public Topic(int id, int user_id, String name, String description, Date created_at) {
+	public Topic(String id, String user_id, String name, String description, Date created_at) {
 		super();
 		this.id = id;
 		this.user_id = user_id;
@@ -25,18 +26,18 @@ public class Topic {
 		this.created_at = created_at;
 	}
 	
-	public int getId() {
+	public String getId() {
 		return id;
 	}
-	public void setId(int id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 	
-	public int getUserId() {
+	public String getUserId() {
 		return user_id;
 	}
 	
-	public void setUserId(int user_id) {
+	public void setUserId(String user_id) {
 		this.user_id = user_id;
 	}
 	

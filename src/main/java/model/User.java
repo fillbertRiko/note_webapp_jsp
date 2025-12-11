@@ -1,48 +1,46 @@
 package model;
 
-import java.sql.Date;
+import java.util.Date;
 
 
 ///Class the hien model nguoi dung 
 ///tao cac getter va setter
 ///lam viec truc tiep voi DB de lay thong tin ve cho controller
-///mapping lai du lieu de gui cho DB 
+///Chi chua du lieu. Lop DAO tuong tac voi DB
+///tao 2 contructor mot cho day du va 1 cho dang ky
 public class User {
-	protected int id;
-	protected String username;
-	protected String password;
-	protected String fullname;
-	protected String email;
-	protected String hobbies;
-	protected Date created_at;
+	private String id;
+	private String username;
+	private String password;
+	private String fullname;
+	private String email;
+	private Date createdAt;
 
-	public User() {
-	}
-
-	public User(String username, String password, String fullname, String email, Date created_at) {
-		super();
-		this.username = username;
-		this.password = password;
-		this.fullname = fullname;
-		this.email = email;
-		this.created_at = created_at;
-	}
+	public User() {}
 	
-	public User(int id, String username, String password, String fullname, String email, Date created_at) {
+	public User(String id, String username, String password, String fullname, String email, Date createdAt) {
 		super();
 		this.id = id;
 		this.username = username;
 		this.password = password;
 		this.fullname = fullname;
 		this.email = email;
-		this.created_at = created_at;
+		this.createdAt = createdAt;
 	}
 	
-	public int getId() {
+	public User(String username, String password, String fullname, String email) {
+		this.username =username;
+		this.password = password;
+		this.fullname = fullname;
+		this.email = email;
+		this.createdAt = new Date();
+	}
+	
+	public String getId() {
 		return id;
 	}
 
-	public void setId(int id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 	
@@ -79,10 +77,10 @@ public class User {
 	}
 	
 	public Date getTimeCreate() {
-		return created_at;
+		return createdAt;
 	}
 	
-	public void setTimeCreate(Date created_at) {
-		this.created_at = created_at;
+	public void setTimeCreate(Date createdAt) {
+		this.createdAt = createdAt;
 	}
 }

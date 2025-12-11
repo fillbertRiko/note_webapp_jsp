@@ -1,136 +1,132 @@
 package DAO;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-import serviceDB.Service;
+import org.bson.Document;
+import org.bson.types.ObjectId;
+
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.result.DeleteResult;
+import com.mongodb.client.result.UpdateResult;
+
 import model.User;
 
 ///Lop DAO giup giao tiep voi tang du lieu
+///khai bao 1 lan 
+///co ham chuyen doi tu Document sang POJO phu hop voi MongoDB
 ///tai day se goi cac cau lenh truy van trong db
 ///tao cac cau truy van CRUD cho User
-///check user account
+///check user account bang username
 public class UserDao {
-	final Connection conn = Service.getConnection();
-	final Statement stmt = conn.createStatement();
-
-	private static final String INSERT_USER_SQL = "INSERT INTO user"
-			+ "(username, fullname, password, email, age)VALUES" + "(?, ?, ?, ?, ?);";
-	private static final String SELECT_USER_BY_ID = "SELECT id,username,fullname,password,email,age FROM user WHERE id =?";
-	private static final String DELETE_USERS_SQL = "delete from users where id = ?;";
-	private static final String UPDATE_USERS_SQL = "update users set name = ?,email= ?, country =? where id = ?;";
-
-	final PreparedStatement rsRead = conn.prepareStatement(SELECT_USER_BY_ID);
-	final PreparedStatement cstmt = conn.prepareStatement(INSERT_USER_SQL);
-	final PreparedStatement ustmt = conn.prepareStatement(UPDATE_USERS_SQL);
-	final PreparedStatement dstmt = conn.prepareStatement(DELETE_USERS_SQL);
-
-	public UserDao() throws SQLException {
-		try (conn; stmt; rsRead) {
-
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-	};
-
-	public User readUser(int id) throws SQLException {
-		User user = null;
-		try (conn; stmt; rsRead) {
-			rsRead.setInt(1, id);
-			System.out.println(rsRead);
-			ResultSet rs = rsRead.executeQuery();
-			while (rs.next()) {
-				user = new User(rs.getInt("id"), rs.getString("username"), rs.getString("password"),
-						rs.getString("fullname"), rs.getString("email"), rs.getDate("created_at"));
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return user;
+	
+	private final MongoCollection<Document> users;
+	
+	public UserDao() {
+		MongoDatabase db = DBConnection.getDatabase();
+		this.users = db.getCollection("users");
 	}
-
-	public List<User> readAllUsers(){
-		List<User> users = new ArrayList<>();
-		try (conn;rsRead) {
-			String SELECT_ALL_USERS = "SELECT * FROM user";
-			PreparedStatement ps = conn.prepareStatement(SELECT_ALL_USERS);
-			System.out.println(ps);
-			ResultSet rs = ps.executeQuery();
-			while (rs.next()) {
-				User user = new User(rs.getInt("id"), rs.getString("username"), rs.getString("password"),
-						rs.getString("fullname"), rs.getString("email"), rs.getDate("created_at"));
-				users.add(user);
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return users;
-	}
-
-	public boolean updateUser(User user) throws SQLException {
-		boolean rowUpdated;
-		try (conn; ustmt) {
-			ustmt.setString(1, user.getFullname());
-			ustmt.setString(2, user.getUsername());
-			ustmt.setString(3, user.getEmail());
-			ustmt.setString(4, user.getPassword());
-			ustmt.setDate(5, user.getTimeCreate());
-			rowUpdated = ustmt.executeUpdate() > 0;
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return false;
-		}
-		return rowUpdated;
-	}
-
-	public void createUser(User user) throws SQLException {
-		System.out.println(INSERT_USER_SQL);
-		try (conn; cstmt) {
-			cstmt.setString(1, user.getUsername());
-			cstmt.setString(2, user.getFullname());
-			cstmt.setString(3, user.getPassword());
-			cstmt.setString(4, user.getEmail());
-			cstmt.setDate(5, user.getTimeCreate());
-			cstmt.executeUpdate();
-		} catch (SQLException e) {
-			e.printStackTrace();
+	
+	private User documentToUser(Document doc) {
+		if(doc == null) {
+			return null;
 		}
 		
+		User user = new User(
+				doc.getObjectId("_id").toHexString(),
+				doc.getString("username"),
+				doc.getString("password"),
+				doc.getString("fullname"),
+				doc.getString("email"),
+				doc.getDate("createdAt"));
+		return user;
 	}
 
-	public boolean deleteUser(int id) throws SQLException {
-		boolean rowDeleted;
-		try (conn; dstmt) {
-			dstmt.setInt(1, id);
-			rowDeleted = dstmt.executeUpdate() > 0;
-		} catch (SQLException e) {
+	public User findUserById(String id){
+		Document query = new Document("_id", new ObjectId(id));
+		Document userDoc = users.find(query).first();
+		
+		if(userDoc == null) {
+			return null;
+		}
+		
+		return documentToUser(userDoc);
+	}
+	
+
+	public List<User> readAllUsers(){
+		List<User> usersList = new ArrayList<>();
+		try (MongoCursor<Document> cursor = users.find().iterator()) {
+			while(cursor.hasNext()) {
+				Document userDoc = cursor.next();
+				usersList.add(documentToUser(userDoc));
+			}
+		} catch(Exception e) {
+			e.printStackTrace();
+		} 
+		return usersList;
+	}
+
+	public boolean updateUser(User user){
+		if(user.getId() == null) {
+			System.err.println("Error: Cannot update User, lost ID.");
+			return false;
+		}
+		
+		try {
+			Document filter = new Document("_id", new ObjectId(user.getId()));
+			Document updateFields = new Document("$set", new Document()
+					.append("username", user.getUsername())
+					.append("fullname", user.getFullname())
+					.append("email", user.getEmail()));
+			
+			UpdateResult result = users.updateOne(filter, updateFields);
+			return result.getModifiedCount() > 0;
+		} catch (Exception e) {
+			System.err.println("Error when update user have ID: " + user.getId());
 			e.printStackTrace();
 			return false;
 		}
-		return rowDeleted;
 	}
 
-	public User getUserByUsernameAndPassword(String username, String password) {
-		User user = null;
-		String SELECT_USER_BY_USERNAME_AND_PASSWORD = "SELECT * FROM user WHERE username = ? AND password = ?";
-		try (conn) {
-			PreparedStatement ps = conn.prepareStatement(SELECT_USER_BY_USERNAME_AND_PASSWORD);
-			ps.setString(1, username);
-			ps.setString(2, password);
-			System.out.println(ps);
-			ResultSet rs = ps.executeQuery();
-			if (rs.next()) {
-				user = new User(rs.getInt("id"), rs.getString("username"), rs.getString("password"),
-						rs.getString("fullname"), rs.getString("email"), rs.getDate("created_at"));
-			}
-		} catch (SQLException e) {
+	public void createUser(User user) {
+		Document userDoc = new Document("_id", new ObjectId())
+				.append("username", user.getUsername())
+				.append("password", user.getPassword())
+				.append("fullname", user.getFullname())
+				.append("email", user.getEmail())
+				.append("created_at", user.getTimeCreate());
+	
+		try {
+			users.insertOne(userDoc);
+			System.out.println("User created with ID: " + userDoc.getObjectId("_id"));
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return user;
+	}
+
+	public boolean deleteUser(String id){
+		try{
+			Document filter = new Document("_id", new ObjectId(id));
+			DeleteResult result = users.deleteOne(filter);
+			return result.getDeletedCount() == 1;
+		} catch (IllegalArgumentException e) {
+			System.err.println("Error: ID user unexcepted" + id);
+			return false;
+		} catch (Exception e) {
+			System.err.println("Error when delete User by ID: " + id);
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	public User findUserByUsername(String username) {
+		Document query = new Document("username", username);
+		Document userDoc = users.find(query).first();
+		
+		return documentToUser(userDoc);
 	}
 }
