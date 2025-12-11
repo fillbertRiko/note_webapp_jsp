@@ -3,14 +3,14 @@ package model;
 import java.sql.Date;
 
 public class Friendship {
-	private int id;
-	private int user_id;
-	private int friend_id;
+	private String id;
+	private String user_id;
+	private String friend_id;
 	private Date created_at;
 	
 	public Friendship() {}
 	
-	public Friendship(int id, int user_id, int friend_id, Date created_at) {
+	public Friendship(String id, String user_id, String friend_id, Date created_at) {
 		super();
 		this.id = id;
 		this.user_id = user_id;
@@ -19,27 +19,27 @@ public class Friendship {
 	}
 	
 	
-	public int getId() {
+	public String getId() {
 		return id;
 	}
 	
-	public void setId(int id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 	
-	public int getUserId() {
+	public String getUserId() {
 		return user_id;
 	}
 	
-	public void setUserId(int user_id) {
+	public void setUserId(String user_id) {
 		this.user_id = user_id;
 	}
 	
-	public int getFriendId() {
+	public String getFriendId() {
 		return friend_id;
 	}
 	
-	public void setFriendId(int friend_id) {
+	public void setFriendId(String friend_id) {
 		this.friend_id = friend_id;
 	}
 	

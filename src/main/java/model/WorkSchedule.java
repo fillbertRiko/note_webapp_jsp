@@ -1,21 +1,22 @@
 package model;
 
 import java.sql.Date;
+import java.util.List;
 
 public class WorkSchedule {
-	private int id;
-	private int user_id;
+	private String id;
+	private String user_id;
 	private String subject;
 	private String description;
 	private Date start_time;
 	private Date end_time;
-	private Enum<?> piority;
+	private List<String> piority;
 	private String location;
 	private Date created_at;
 	
 	public WorkSchedule() {}
 	
-	public WorkSchedule(int id, int user_id, String subject, String description, Date start_time, Date end_time, Enum<?> piority, String location, Date created_at) {
+	public WorkSchedule(String id, String user_id, String subject, String description, Date start_time, Date end_time, List<String> piority, String location, Date created_at) {
 		super();
 		this.id = id;
 		this.user_id = user_id;
@@ -28,19 +29,19 @@ public class WorkSchedule {
 		this.created_at = created_at;
 	}
 	
-	public int getId() {
+	public String getId() {
 		return id;
 	}
 	
-	public void setId(int id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 	
-	public int getUserId() {
+	public String getUserId() {
 		return user_id;
 	}
 	
-	public void setUserId(int user_id) {
+	public void setUserId(String user_id) {
 		this.user_id = user_id;
 	}
 	
@@ -76,11 +77,11 @@ public class WorkSchedule {
 		this.end_time = end_time;
 	}
 	
-	public Enum<?> getPiority() {
+	public List<String> getPiority() {
 		return piority;
 	}
 	
-	public void setPiority(Enum<?> piority) {
+	public void setPiority(List<String> piority) {
 		this.piority = piority;
 	}
 	
