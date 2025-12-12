@@ -1,21 +1,29 @@
 package model;
 
-import java.sql.Date;
+import java.util.Date;
 
 public class Comments {
 	private String id;
-	private String post_id;
-	private String user_id;
+	private String postId;
+	private String userId;
 	private String content;
-	private Date created_at;
+	private Date createdAt;
 	
 	public Comments() {};
-	public Comments(String id, String post_id, String user_id, String content, Date created_at) {
+	public Comments(String id, String postId, String userId, String content, Date createdAt) {
 		super();
 		this.id = id;
-		this.post_id = post_id;
+		this.postId = postId;
+		this.userId = userId;
 		this.content = content;
-		this.created_at = created_at;
+		this.createdAt = createdAt;
+	}
+	
+	public Comments(String postId, String userId, String content) {
+		this.postId = postId;
+		this.userId = userId;
+		this.content = content;
+		this.createdAt = new Date();
 	}
 	
 	public String getId() {
@@ -27,19 +35,19 @@ public class Comments {
 	}
 	
 	public String getUserId() {
-		return user_id;
+		return userId;
 	}
 	
-	public void setUserId(String user_id) {
-		this.user_id = user_id;
+	public void setUserId(String userId) {
+		this.userId = userId;
 	}
 	
 	public String getPostId() {
-		return post_id;
+		return postId;
 	}
 	
-	public void setPostId(String post_id) {
-		this.post_id = post_id;
+	public void setPostId(String postId) {
+		this.postId = postId;
 	}
 	
 	public String getContent() {
@@ -51,10 +59,10 @@ public class Comments {
 	}
 	
 	public Date getTimeCreate() {
-		return created_at;
+		return createdAt;
 	}
 	
-	public void setTimeCteate(Date created_at) {
-		this.created_at = created_at;
+	public void setTimeCteate(Date createdAt) {
+		this.createdAt = createdAt;
 	}
 }
