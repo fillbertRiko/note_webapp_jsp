@@ -10,14 +10,14 @@ import com.mongodb.client.MongoDatabase;
 ///phuong thuc khoi tao va tra ve doi duong MongoDatabase
 ///phuong thuc donog ket noi de tranh bi hieu ung bottleneck dong du lieu den server
 public class DBConnection {
-	private static final String Connection_string = "mongodb://localhost:27017";
-	private static final String Database_name = "webapp_note_jsp";
+	private static final String CONNECTION_STRING = "mongodb://localhost:27017";
+	private static final String DATABASE_NAME = "webapp_note_jsp";
 	private static MongoClient mongoClient = null;
 	
 	public static MongoDatabase getDatabase() {
 		if(mongoClient == null) {
 			try {
-				mongoClient = MongoClients.create(Connection_string);
+				mongoClient = MongoClients.create(CONNECTION_STRING);
 				
 				System.out.println("Access successfully");
 			} catch (Exception e) {
@@ -26,7 +26,7 @@ public class DBConnection {
 			}
 		}
 		
-		return mongoClient.getDatabase(Database_name);
+		return mongoClient.getDatabase(DATABASE_NAME);
 	}
 	
 	public static void closeConnection() {

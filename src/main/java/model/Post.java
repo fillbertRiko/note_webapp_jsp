@@ -1,33 +1,44 @@
 package model;
 
-import java.sql.Date;
+import java.util.Date;
 
 public class Post {
 	private String id;
-	private String user_id;
-	private String topic_id;
+	private String userId;
+	private String topicId;
 	private String title;
 	private String content;
-	private Date created_at;
-	private Date updated_at;
-	private String access_level_id;
-	private String allow_comment;
+	private Date createdAt;
+	private Date updatedAt;
+	private String accessLevelId;
+	private String allowComment;
 
 	public Post() {
 		
 	}
 
-	public Post(String id, String user_id, String topic_id, String title, String content, Date created_at, Date updated_at, String access_level_id, String allow_comment) {
+	public Post(String id, String userId, String topicId, String title, String content, Date createdAt, Date updatedAt, String accessLevelId, String allowComment) {
 		super();
 		this.id = id;
-		this.user_id = user_id;
-		this.topic_id = topic_id;
+		this.userId = userId;
+		this.topicId = topicId;
 		this.title = title;
 		this.content = content;
-		this.created_at = created_at;
-		this.updated_at = updated_at;
-		this.access_level_id = access_level_id;
-		this.allow_comment = allow_comment;
+		this.createdAt = createdAt;
+		this.updatedAt = updatedAt;
+		this.accessLevelId = accessLevelId;
+		this.allowComment = allowComment;
+	}
+	
+	public Post(String userId, String topicId, String title, String content, String accessLevelId, String allowComment) {
+		this.userId = userId;
+		this.topicId = topicId;
+		this.title = title;
+		this.content = content;
+		this.accessLevelId = accessLevelId;
+		this.allowComment = allowComment;
+		this.createdAt = new Date();
+		this.updatedAt = new Date();
 	}
 	
 	public String getId() {
@@ -39,19 +50,19 @@ public class Post {
 	}
 	
 	public String getUserId() {
-		return user_id;
+		return userId;
 	}
 	
-	public void setUserId(String user_id) {
-		this.user_id = user_id;
+	public void setUserId(String userId) {
+		this.userId = userId;
 	}
 	
 	public String getTopicId() {
-		return topic_id;
+		return topicId;
 	}
 	
-	public void setTopicId(String topic_id) {
-		this.topic_id = topic_id;
+	public void setTopicId(String topicId) {
+		this.topicId = topicId;
 	}
 	
 	public String getTitle() {
@@ -71,34 +82,34 @@ public class Post {
 	}
 	
 	public Date getTimeCreate() {
-		return created_at;
+		return createdAt;
 	}
 	
-	public void setTimeCreate(Date created_at) {
-		this.created_at = created_at;
+	public void setTimeCreate(Date createdAt) {
+		this.createdAt = createdAt;
 	}
 	
 	public Date getTimeUpdate() {
-		return updated_at;
+		return updatedAt;
 	}
 	
-	public void setTimeUpdate(Date updated_at) {
-		this.updated_at = updated_at;
+	public void setTimeUpdate(Date updatedAt) {
+		this.updatedAt = updatedAt;
 	}
 	
 	public String getAccessLevelId() {
-		return access_level_id;
+		return accessLevelId;
 	}
 	
-	public void setAccessLevelId(String access_level_id) {
-		this.access_level_id = access_level_id;
+	public void setAccessLevelId(String accessLevelId) {
+		this.accessLevelId = accessLevelId;
 	}
 	
 	public String getNumberAllowComment() {
-		return allow_comment;
+		return allowComment;
 	}
 	
-	public void setNumberAllowComment(String allow_comment) {
-		this.allow_comment = allow_comment;
+	public void setNumberAllowComment(String allowComment) {
+		this.allowComment = allowComment;
 	}
 }

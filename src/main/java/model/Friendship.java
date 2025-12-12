@@ -1,21 +1,27 @@
 package model;
 
-import java.sql.Date;
+import java.util.Date;
 
 public class Friendship {
 	private String id;
-	private String user_id;
-	private String friend_id;
-	private Date created_at;
+	private String userId;
+	private String friendId;
+	private Date createdAt;
 	
 	public Friendship() {}
 	
-	public Friendship(String id, String user_id, String friend_id, Date created_at) {
+	public Friendship(String id, String userId, String friendId, Date createdAt) {
 		super();
 		this.id = id;
-		this.user_id = user_id;
-		this.friend_id = friend_id;
-		this.created_at = created_at;
+		this.userId = userId;
+		this.friendId = friendId;
+		this.createdAt = createdAt;
+	}
+	
+	public Friendship(String userId, String friendId) {
+		this.userId = userId;
+		this.friendId = friendId;
+		this.createdAt = new Date();
 	}
 	
 	
@@ -28,26 +34,26 @@ public class Friendship {
 	}
 	
 	public String getUserId() {
-		return user_id;
+		return userId;
 	}
 	
-	public void setUserId(String user_id) {
-		this.user_id = user_id;
+	public void setUserId(String userId) {
+		this.userId = userId;
 	}
 	
 	public String getFriendId() {
-		return friend_id;
+		return friendId;
 	}
 	
-	public void setFriendId(String friend_id) {
-		this.friend_id = friend_id;
+	public void setFriendId(String friendId) {
+		this.friendId = friendId;
 	}
 	
 	public Date getTimeCreate() {
-		return created_at;
+		return createdAt;
 	}
 	
-	public void setTimeCreate(Date created_at) {
-		this.created_at = created_at;
+	public void setTimeCreate(Date createdAt) {
+		this.createdAt = createdAt;
 	}
 }

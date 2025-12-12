@@ -1,21 +1,29 @@
 package model;
 
-import java.sql.Date;
+import java.util.Date; 
 
+// Class thể hiện cấu hình giao diện trang chủ của người dùng.
 public class UserLayout {
+    
 	private String id;
-	private String user_id;
-	private String homepage_config;
-	private Date updated_at;
+	private String userId; 
+	private String homepageConfig; 
+	private Date updatedAt; 
 	
 	public UserLayout() {}
 	
-	public UserLayout(String id, String user_id, String homepage_config, Date updated_at) {
+	public UserLayout(String id, String userId, String homepageConfig, Date updatedAt) {
 		super();
 		this.id = id;
-		this.user_id = user_id;
-		this.homepage_config = homepage_config;
-		this.updated_at = updated_at;
+		this.userId = userId;
+		this.homepageConfig = homepageConfig;
+		this.updatedAt = updatedAt;
+	}
+	
+	public UserLayout(String userId, String homepageConfig) {
+		this.userId = userId;
+		this.homepageConfig = homepageConfig;
+		this.updatedAt = new Date();
 	}
 	
 	public String getId() {
@@ -27,26 +35,26 @@ public class UserLayout {
 	}
 	
 	public String getUserId() {
-		return user_id;
+		return userId;
 	}
 	
-	public void setUserId(String user_id) {
-		this.user_id = user_id;
+	public void setUserId(String userId) {
+		this.userId = userId;
 	}
 	
 	public String getHomepageConfig() {
-		return homepage_config;
+		return homepageConfig;
 	}
 	
-	public void setHomepageConfig(String homepage_config) {
-		this.homepage_config = homepage_config;
+	public void setHomepageConfig(String homepageConfig) {
+		this.homepageConfig = homepageConfig;
 	}
 	
-	public Date getTimeUpdate() {
-		return updated_at;
+	public Date getUpdatedAt() {
+		return updatedAt;
 	}
 	
-	public void setTimeUpdate(Date updated_at) {
-		this.updated_at = updated_at;
+	public void setUpdatedAt(Date updatedAt) {
+		this.updatedAt = updatedAt;
 	}
 }

@@ -1,31 +1,37 @@
 package model;
 
-import java.sql.Date;
+import java.util.Date;
 
 ///Class topic de them chieu voi model danh muc
 ///tao getter va setter 
 ///cac ham ket noi voi model thong qua goi ham
 ///nen luu id theo dang chuoi de tranh viec xung dot view/controller vi dang su dung mongodb
 public class Topic {
-	protected String id;
-	protected String user_id;
-	protected String name;
-	protected String description;
-	protected Date created_at;
+	private String id;
+	private String userId;
+	private String name;
+	private String description;
+	private Date createdAt;
 	
 	public Topic() {
-		
 	}
 	
-	public Topic(String id, String user_id, String name, String description, Date created_at) {
+	public Topic(String id, String userId, String name, String description, Date createdAt) {
 		super();
 		this.id = id;
-		this.user_id = user_id;
+		this.userId = userId;
 		this.name = name;
 		this.description = description;
-		this.created_at = created_at;
+		this.createdAt = createdAt;
 	}
 	
+	public Topic(String userId, String name, String description) {
+		this.userId = userId;
+		this.name = name;
+		this.description = description;
+		this.createdAt = new Date();
+	}
+    
 	public String getId() {
 		return id;
 	}
@@ -34,11 +40,11 @@ public class Topic {
 	}
 	
 	public String getUserId() {
-		return user_id;
+		return userId;
 	}
-	
-	public void setUserId(String user_id) {
-		this.user_id = user_id;
+ 
+	public void setUserId(String userId) {
+		this.userId = userId;
 	}
 	
 	public String getName()  {
@@ -57,11 +63,11 @@ public class Topic {
 		this.description = description;
 	}
 	
-	public Date getTimeCreate() {
-		return created_at;
+	public Date getCreatedAt() {
+		return createdAt;
 	}
-	
-	public void setTimeCreate(Date created_at) {
-		this.created_at = created_at;
+    
+	public void setCreatedAt(Date createdAt) {
+		this.createdAt = createdAt;
 	}
 }

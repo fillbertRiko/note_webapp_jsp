@@ -1,24 +1,30 @@
 package model;
 
-import java.sql.Date;
-import java.util.List;
+import java.util.Date;
 
 public class FriendInvites {
 	private String id;
-	private String sender_id;
-	private String receiver_id;
-	private List<String> status;
-	private Date sent_at;
+	private String senderId;
+	private String receiverId;
+	private String status;
+	private Date sentAt;
 	
 	public FriendInvites() {};
 	
-	public FriendInvites(String id, String sender_id, String receiver_id, List<String> status, Date sent_at) {
+	public FriendInvites(String id, String senderId, String receiverId, String status, Date sentAt) {
 		super();
 		this.id = id;
-		this.sender_id = sender_id;
-		this.receiver_id = receiver_id;
+		this.senderId = senderId;
+		this.receiverId = receiverId;
 		this.status = status;
-		this.sent_at = sent_at;
+		this.sentAt = sentAt;
+	}
+	
+	public FriendInvites(String senderId, String receiverId, String status) {
+		this.senderId = senderId;
+		this.receiverId = receiverId;
+		this.status = status;
+		this.sentAt = new Date();
 	}
 	
 	public String getId() {
@@ -30,34 +36,34 @@ public class FriendInvites {
 	}
 	
 	public String getSenderId() {
-		return sender_id;
+		return senderId;
 	}
 	
-	public void setSenderId(String sender_id) {
-		this.sender_id = sender_id;
+	public void setSenderId(String senderId) {
+		this.senderId = senderId;
 	}
 	
 	public String getReceiverId() {
-		return receiver_id;
+		return receiverId;
 	}
 	
-	public void setReceiverId(String receiver_id) {
-		this.receiver_id = receiver_id;
+	public void setReceiverId(String receiverId) {
+		this.receiverId = receiverId;
 	}
 	
-	public List<String> getStatus() {
+	public String getStatus() {
 		return status;
 	}
 	
-	public void setStatus(List<String> status) {
+	public void setStatus(String status) {
 		this.status = status;
 	}
 	
 	public Date getTimeSent() {
-		return sent_at;
+		return sentAt;
 	}
 	
-	public void setTimeSent(Date sent_at) {
-		this.sent_at = sent_at;
+	public void setTimeSent(Date sentAt) {
+		this.sentAt = sentAt;
 	}
 }

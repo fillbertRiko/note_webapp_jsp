@@ -1,32 +1,43 @@
 package model;
 
-import java.sql.Date;
-import java.util.List;
+import java.util.Date;
 
 public class WorkSchedule {
+	
 	private String id;
-	private String user_id;
+	private String userId;
 	private String subject;
 	private String description;
-	private Date start_time;
-	private Date end_time;
-	private List<String> piority;
+	private Date startTime;
+	private Date endTime;
+	private String priority; 
 	private String location;
-	private Date created_at;
+	private Date createdAt;
 	
 	public WorkSchedule() {}
 	
-	public WorkSchedule(String id, String user_id, String subject, String description, Date start_time, Date end_time, List<String> piority, String location, Date created_at) {
+	public WorkSchedule(String id, String userId, String subject, String description, Date startTime, Date endTime, String priority, String location, Date createdAt) {
 		super();
 		this.id = id;
-		this.user_id = user_id;
+		this.userId = userId;
 		this.subject = subject;
 		this.description = description;
-		this.start_time = start_time;
-		this.end_time = end_time;
-		this.piority = piority;
+		this.startTime = startTime;
+		this.endTime = endTime;
+		this.priority = priority;
 		this.location = location;
-		this.created_at = created_at;
+		this.createdAt = createdAt;
+	}
+	
+	public WorkSchedule(String userId, String subject, String description, String priority, String location) {
+		this.userId = userId;
+		this.subject = subject;
+		this.description = description;
+		this.priority = priority;
+		this.location = location;
+		this.startTime = new Date();
+		this.endTime =new Date();
+		this.createdAt = new Date();
 	}
 	
 	public String getId() {
@@ -38,11 +49,11 @@ public class WorkSchedule {
 	}
 	
 	public String getUserId() {
-		return user_id;
+		return userId;
 	}
 	
-	public void setUserId(String user_id) {
-		this.user_id = user_id;
+	public void setUserId(String userId) {
+		this.userId = userId;
 	}
 	
 	public String getSubject() {
@@ -62,30 +73,30 @@ public class WorkSchedule {
 	}
 	
 	public Date getStartTime() {
-		return start_time;
+		return startTime;
 	}
 	
-	public void setStartTime(Date start_time) {
-		this.start_time = start_time;
+	public void setStartTime(Date startTime) {
+		this.startTime = startTime;
 	}
 	
 	public Date getEndTime() {
-		return end_time;
+		return endTime;
 	}
 	
-	public void setEndTime(Date end_time) {
-		this.end_time = end_time;
+	public void setEndTime(Date endTime) {
+		this.endTime = endTime;
 	}
 	
-	public List<String> getPiority() {
-		return piority;
+	public String getPriority() {
+		return priority;
 	}
 	
-	public void setPiority(List<String> piority) {
-		this.piority = piority;
+	public void setPriority(String priority) {
+		this.priority = priority;
 	}
 	
-	public String getLocaion() {
+	public String getLocation() {
 		return location;
 	}
 	
@@ -93,11 +104,11 @@ public class WorkSchedule {
 		this.location = location;
 	}
 	
-	public Date getTimeCreated() {
-		return created_at;
+	public Date getCreatedAt() {
+		return createdAt;
 	}
 	
-	public void setTimeCreated(Date created_at) {
-		this.created_at = created_at;
+	public void setCreatedAt(Date createdAt) {
+		this.createdAt = createdAt;
 	}
 }
