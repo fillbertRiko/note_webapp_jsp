@@ -115,6 +115,21 @@ public class PostDAO {
 		}
 	}
 	
+	public boolean deletePostsByUserId(String userId) {
+		try {
+			Document filter = new Document("userId", new ObjectId(userId));
+			DeleteResult result = posts.deleteMany(filter);
+			return result.getDeletedCount() >0;
+		} catch (IllegalArgumentException e) {
+			System.err.println("Error: ID user not found" + userId);
+			return false;
+		} catch(Exception e) {
+			System.err.println("Error when delete Post by UserID: " + userId);
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
 	public Post findPostByTitle(String title) {
 		Document query = new Document("title", title);
 		Document postDoc = posts.find(query).first();
