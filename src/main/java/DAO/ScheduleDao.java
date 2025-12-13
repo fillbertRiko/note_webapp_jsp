@@ -153,6 +153,21 @@ public class ScheduleDao {
 		}
 	}
 	
+	public boolean deleteSchedulesByUserId(String userId) {
+		try {
+			Document filter = new Document("userId", new ObjectId(userId));
+			DeleteResult result = schedules.deleteMany(filter);
+			return result.getDeletedCount() >0;
+		} catch (IllegalArgumentException e) {
+			System.err.println("Error: ID user not found" + userId);
+			return false;
+		} catch(Exception e) {
+			System.err.println("Error when delete Post by UserID: " + userId);
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
 	public WorkSchedule findUserBySubject(String subject) {
 		Document query = new Document("subject", subject);
 		Document scheduleDoc = schedules.find(query).first();

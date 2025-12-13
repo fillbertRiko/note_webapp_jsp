@@ -121,6 +121,21 @@ public class TopicDAO {
 		}
 	}
 	
+	public boolean deleteTopicsByUserId(String userId) {
+		try {
+			Document filter = new Document("userId", new ObjectId(userId));
+			DeleteResult result = topics.deleteMany(filter);
+			return result.getDeletedCount() >0;
+		} catch (IllegalArgumentException e) {
+			System.err.println("Error: ID user not found" + userId);
+			return false;
+		} catch(Exception e) {
+			System.err.println("Error when delete Post by UserID: " + userId);
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
 	public Topic findTopicByName(String name) {
 		Document query = new Document("name", name);
 		Document topicDoc = topics.find(query).first();
