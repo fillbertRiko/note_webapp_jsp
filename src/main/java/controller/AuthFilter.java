@@ -33,21 +33,24 @@ public class AuthFilter implements Filter {
 	
 	@Override
 	public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
-		HttpServletRequest httpRequest = (HttpServletRequest) req;
-		HttpServletResponse httpResponse = (HttpServletResponse) res;
-	    
-		String requestURI = httpRequest.getRequestURI();
-		HttpSession session = httpRequest.getSession(false);
+		HttpServletRequest request = (HttpServletRequest) req;
+		HttpServletResponse response = (HttpServletResponse) res;
 		
-		boolean isLoginRequest = requestURI.endsWith("/login") || requestURI.endsWith("/login.jsp");
-		boolean isRegisterRequest = requestURI.endsWith("/register") || requestURI.endsWith("/register.jsp");
-		boolean isPublicResource = isLoginRequest || isRegisterRequest || requestURI.contains("/style/style.css");
-		boolean isLoggedIn = (session != null && session.getAttribute("currentUser") != null);
+		HttpSession session = request.getSession(false);
+		String requestURI = request.getRequestURI();
+		String contextPath = request.getContextPath();
 		
-		if(isLoggedIn || isPublicResource) {
-			chain.doFilter(req, res);
-		} else {
-			httpResponse.sendRedirect(httpRequest.getContextPath() + "/index.jsp");
+		String loginURI = request.getContextPath() +"/auth/login.jsp";
+		
+		boolean loggedIn = (session != null && session.getAttribute("currentUser") != null);
+		boolean isLoginPage = requestURI.equals(contextPath + "/auth/login.jsp") || requestURI.equals(contextPath + "/login");
+		boolean isIndexPage = requestURI.equals(contextPath + "/") || requestURI.equals(contextPath + "/index.jsp");
+	    boolean isStaticResource = requestURI.contains("/style/") || requestURI.endsWith(".css") || requestURI.endsWith(".png");
+		
+		if(loggedIn || isLoginPage || isIndexPage || isStaticResource) {
+			chain.doFilter(request, response);
+		}else {
+			response.sendRedirect(loginURI);
 		}
 	}
 }

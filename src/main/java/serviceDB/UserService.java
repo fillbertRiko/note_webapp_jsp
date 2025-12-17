@@ -23,7 +23,7 @@ public class UserService {
 	public User login(String username, String password) {
 		User user = userDao.findUserByUsername(username);
 		
-		if(user != null ) {
+		if(user != null) {
 			String hashedInputPassword = SHA256Hasher.hash(password);
 			String storedHasherPassword = user.getPassword();
 			System.out.println(hashedInputPassword.toString());
@@ -34,7 +34,7 @@ public class UserService {
 			} else {
 				System.out.println("Wrong password");
 			}
-			return user;
+			return null;
 		} else {
 			System.out.println("Cannot found user");
 		}
