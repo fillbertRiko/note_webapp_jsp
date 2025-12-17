@@ -28,6 +28,6 @@ public class LogoutController extends HttpServlet{
 			session.invalidate();
 		}
 //		System.out.println("currentUser");
-        res.sendRedirect(req.getContextPath() + "/index.jsp");
+        res.sendRedirect(req.getContextPath() + "/auth/login.jsp");
 	}
 }

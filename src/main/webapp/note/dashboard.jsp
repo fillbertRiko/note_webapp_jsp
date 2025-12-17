@@ -4,17 +4,11 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Welcome to your note</title>
+<title>Insert title here</title>
 </head>
 <body>
-	<h2>Welcome to your note</h2>
-	<div class="container">
-		<h4>Have a good day</h4>
-		<div class="box-container">
-			<form action="${pageContext.request.contextPath}/logout" method="GET">
+	<form action="${pageContext.request.contextPath}/logout" method="GET">
 				<button type="submit" class="btn-logout">Logout</button>
 			</form>
-		</div>
-	</div>
 </body>
 </html>

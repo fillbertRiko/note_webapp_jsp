@@ -2,7 +2,6 @@ package controller;
 
 import java.io.IOException;
 
-import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -19,42 +18,52 @@ public class LoginController extends HttpServlet{
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+	private UserService userService;
+	
+	@Override
+	public void init() throws ServletException {
+		userService = new UserService();
+	}
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse res)
 		throws ServletException, IOException {
-		RequestDispatcher rd = req.getRequestDispatcher("/index.jsp");
-		rd.forward(req, res);
+		HttpSession session = req.getSession(false);
+		if(session !=  null && session.getAttribute("currentUser") != null) {
+			res.sendRedirect(req.getContextPath() + "/note/dashboard.jsp");
+			return;
+		}
+		
+		req.getRequestDispatcher("/auth/login.jsp").forward(req, res);
 	}
 	
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
 		res.setContentType("text/html;charset=UTF-8");
 		
-			String username = req.getParameter("username");
-			String password = req.getParameter("password");
-//			System.out.println(username.toString());
+		String username = req.getParameter("username");
+		String password = req.getParameter("password");
+		User user = userService.login(username, password);
 		
-			UserService service = new UserService();
-			User user = service.login(username, password);
-			if(user != null) {
-				HttpSession oldSession = req.getSession(true);
-				if(oldSession != null) {
-					oldSession.invalidate();
-				}
-				HttpSession session = req.getSession(true);
-		        session.setAttribute("currentUser", user);
-		        res.sendRedirect(req.getContextPath() + "/index.jsp");
-		        System.out.println("SessionId : " + req.getSession().getId());
-		        return;
-			}else {
-				HttpSession session = req.getSession(false);
-				if(session != null) {
-					session.invalidate();
-				}
-				req.setAttribute("errorMessage", "Wrong username or password");
-				res.sendRedirect(req.getContextPath() + "/auth/login.jsp?error=1");
-				System.out.println(req.getContextPath().toString());
+		if(user != null) {
+			HttpSession oldSession = req.getSession(false);
+			if(oldSession != null) {
+				oldSession.invalidate();
 			}
+			
+			HttpSession session = req.getSession(true);
+			session.setAttribute("currentUser", user);
+			
+			res.sendRedirect(req.getContextPath() + "/note/dashboard.jsp");
+			return;
+		} else {
+			HttpSession session = req.getSession(false);
+			if(session != null) {
+				session.removeAttribute("currentUser");
+			}
+			
+			req.setAttribute("errorMessage", "Username or password wrong, please check your username or password");
+			req.getRequestDispatcher("/auth/login.jsp").forward(req, res);
+		}
 	}
 }
