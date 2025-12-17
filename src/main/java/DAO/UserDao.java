@@ -4,11 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 
@@ -26,7 +28,7 @@ public class UserDao {
 	
 	public UserDao() {
 		MongoDatabase db = DBConnection.getDatabase();
-		this.users = db.getCollection("users");
+		this.users = db.getCollection("user");
 	}
 	
 	private User documentToUser(Document doc) {
@@ -41,6 +43,7 @@ public class UserDao {
 				doc.getString("fullname"),
 				doc.getString("email"),
 				doc.getDate("createdAt"));
+//		System.out.println(doc.getString("password"));
 		return user;
 	}
 
@@ -91,19 +94,22 @@ public class UserDao {
 		}
 	}
 
-	public void createUser(User user) {
+	public User createUser(User user) {
 		Document userDoc = new Document("_id", new ObjectId())
 				.append("username", user.getUsername())
 				.append("password", user.getPassword())
 				.append("fullname", user.getFullname())
 				.append("email", user.getEmail())
-				.append("created_at", user.getTimeCreate());
+				.append("createdAt", user.getTimeCreate());
 	
 		try {
 			users.insertOne(userDoc);
+			user.setId(userDoc.getObjectId("_id").toHexString());
 			System.out.println("User created with ID: " + userDoc.getObjectId("_id"));
+			return user;
 		} catch (Exception e) {
 			e.printStackTrace();
+			return null;
 		}
 	}
 
@@ -125,6 +131,22 @@ public class UserDao {
 	public User findUserByUsername(String username) {
 		Document query = new Document("username", username);
 		Document userDoc = users.find(query).first();
+		
+		if(userDoc == null) {
+			System.out.println("DEBUG: Cann't found user: " + username);
+			return null;
+		}
+		
+		System.out.println(userDoc.toString());
+		
+		return documentToUser(userDoc);
+	}
+	
+	public User findUserByUsernameOrEmail(String username, String email) {
+		Bson filter = Filters.or(
+				Filters.eq("username", username),
+				Filters.eq("email", email));
+		Document userDoc = users.find(filter).first();
 		
 		return documentToUser(userDoc);
 	}

@@ -1,11 +1,13 @@
 package DAO;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
 
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
@@ -34,17 +36,37 @@ public class PostDAO {
 				doc.getDate("createdAt"),
 				doc.getDate("updatedAt"),
 				doc.getString("accessLevelId"),
-				doc.getString("allowComment"));
+				doc.getString("allowComment"), 
+				doc.getDate("month"),
+				doc.getDate("year"));
 		return post;
 	}
 	
-	public Post findPostById(String id) {
-		Document query = new Document("_id", new ObjectId(id));
+	public Post findPostByUser(String userId) {
+		Document query = new Document("_id", new ObjectId(userId));
 		Document postDoc = posts.find(query).first();
 		
 		if(postDoc == null) return null;
 		
 		return documentToPost(postDoc);
+	}
+	
+	public Post findByMonth(String userId, Date month, Date year) {
+		Document query = new Document("_id", new ObjectId(userId));
+		Document postDoc = posts.find(query).first();
+		
+		if(postDoc == null)	return null;
+		
+		return documentToPost(postDoc);
+	}
+	
+	public Post findPublicPost(String allowComment) {
+		Document query = new Document("_id", new ObjectId(allowComment));
+		FindIterable<Document> postDoc = posts.find(query).max(query);
+		
+		if(postDoc == null) return null;
+		
+		return documentToPost((Document) postDoc);
 	}
 	
 	public List<Post> readAllPost() {
@@ -137,22 +159,8 @@ public class PostDAO {
 		return documentToPost(postDoc);
 	}
 	
-	public Post findPostByTopic(String topicId) {
-		Document query = new Document("topicId", topicId);
-		Document postDoc = posts.find(query).first();
-		
-		return documentToPost(postDoc);
-	}
-	
 	public Post findPostByUserId(String userId) {
 		Document query = new Document("userId", userId);
-		Document postDoc = posts.find(query).first();
-		
-		return documentToPost(postDoc);
-	}
-	
-	public Post findPostByContent(String content) {
-		Document query = new Document("content", content);
 		Document postDoc = posts.find(query).first();
 		
 		return documentToPost(postDoc);

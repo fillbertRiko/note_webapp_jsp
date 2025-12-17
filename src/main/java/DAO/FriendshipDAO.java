@@ -4,11 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 
@@ -113,6 +115,30 @@ public class FriendshipDAO {
 			return false;
 		} catch (Exception e) {
 			System.err.println("Error when delete relationship by ID: " + id);
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	public boolean deleteRelationshipByUserId(String userId) {
+		try {
+			ObjectId userObjectId = new ObjectId(userId);
+			
+			Bson filter = Filters.or(
+					Filters.eq("userId1", userObjectId),
+					Filters.eq("userId2", userObjectId));
+			
+			DeleteResult result = friendships.deleteMany(filter);
+			
+			//debug
+			System.out.println(result.toString());
+			
+			return true;
+		} catch (IllegalArgumentException e) {
+			System.err.println("Error: ID user not excepted: " + userId);
+			return false;
+		} catch (Exception e) {
+			System.err.println("Error when delete Friendship: " + userId);
 			e.printStackTrace();
 			return false;
 		}

@@ -8,6 +8,8 @@ public class Post {
 	private String topicId;
 	private String title;
 	private String content;
+	private Date month;
+	private Date year;
 	private Date createdAt;
 	private Date updatedAt;
 	private String accessLevelId;
@@ -17,20 +19,22 @@ public class Post {
 		
 	}
 
-	public Post(String id, String userId, String topicId, String title, String content, Date createdAt, Date updatedAt, String accessLevelId, String allowComment) {
+	public Post(String id, String userId, String topicId, String title, String content, Date createdAt, Date updatedAt, String accessLevelId, String allowComment, Date month, Date year) {
 		super();
 		this.id = id;
 		this.userId = userId;
 		this.topicId = topicId;
 		this.title = title;
 		this.content = content;
+		this.month = month;
+		this.year = year;
 		this.createdAt = createdAt;
 		this.updatedAt = updatedAt;
 		this.accessLevelId = accessLevelId;
 		this.allowComment = allowComment;
 	}
 	
-	public Post(String userId, String topicId, String title, String content, String accessLevelId, String allowComment) {
+	public Post(String userId, String topicId, String title, String content, String accessLevelId, String allowComment, Date month, Date year) {
 		this.userId = userId;
 		this.topicId = topicId;
 		this.title = title;
@@ -39,6 +43,8 @@ public class Post {
 		this.allowComment = allowComment;
 		this.createdAt = new Date();
 		this.updatedAt = new Date();
+		this.month = new Date();
+		this.year = new Date();
 	}
 	
 	public String getId() {
@@ -111,5 +117,21 @@ public class Post {
 	
 	public void setNumberAllowComment(String allowComment) {
 		this.allowComment = allowComment;
+	}
+	
+	public Date getMonth() {
+		return month;
+	}
+	
+	public void setMonth(Date month) {
+		this.month = month;
+	}
+	
+	public Date getYear() {
+		return year;
+	}
+	
+	public void setYear(Date year) {
+		this.year = year;
 	}
 }
