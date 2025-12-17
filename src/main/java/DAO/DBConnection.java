@@ -11,21 +11,28 @@ import com.mongodb.client.MongoDatabase;
 ///phuong thuc donog ket noi de tranh bi hieu ung bottleneck dong du lieu den server
 public class DBConnection {
 	private static final String CONNECTION_STRING = "mongodb://localhost:27017";
-	private static final String DATABASE_NAME = "webapp_note_jsp";
+	private static final String DATABASE_NAME = "note_webapp_jsp";
 	private static MongoClient mongoClient = null;
 	
-	public static MongoDatabase getDatabase() {
+	public static void initConnection() {
 		if(mongoClient == null) {
 			try {
 				mongoClient = MongoClients.create(CONNECTION_STRING);
-				
-				System.out.println("Access successfully");
+				System.out.println(">> MongoDB: connect successfull");
 			} catch (Exception e) {
-				System.err.println("Error to connection database: check server or connection string!!!");
-				throw new RuntimeException("Cannot connect to database, please check your connection string");
+				throw new RuntimeException("DB Connection init fail. ", e);
 			}
 		}
-		
+	}
+	
+	public static MongoDatabase getDatabase() {
+		if(mongoClient == null ) {
+			synchronized (DBConnection.class) {
+				if(mongoClient == null) {
+					initConnection();
+				}
+			}
+		}
 		return mongoClient.getDatabase(DATABASE_NAME);
 	}
 	
