@@ -51,6 +51,7 @@ public class LoginController extends HttpServlet{
 				oldSession.invalidate();
 			}
 			
+			
 			HttpSession session = req.getSession(true);
 			session.setAttribute("currentUser", user);
 			

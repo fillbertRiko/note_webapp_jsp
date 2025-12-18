@@ -33,24 +33,31 @@ public class AuthFilter implements Filter {
 	
 	@Override
 	public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
-		HttpServletRequest request = (HttpServletRequest) req;
-		HttpServletResponse response = (HttpServletResponse) res;
-		
-		HttpSession session = request.getSession(false);
-		String requestURI = request.getRequestURI();
-		String contextPath = request.getContextPath();
-		
-		String loginURI = request.getContextPath() +"/auth/login.jsp";
-		
-		boolean loggedIn = (session != null && session.getAttribute("currentUser") != null);
-		boolean isLoginPage = requestURI.equals(contextPath + "/auth/login.jsp") || requestURI.equals(contextPath + "/login");
-		boolean isIndexPage = requestURI.equals(contextPath + "/") || requestURI.equals(contextPath + "/index.jsp");
-	    boolean isStaticResource = requestURI.contains("/style/") || requestURI.endsWith(".css") || requestURI.endsWith(".png");
-		
-		if(loggedIn || isLoginPage || isIndexPage || isStaticResource) {
-			chain.doFilter(request, response);
-		}else {
-			response.sendRedirect(loginURI);
-		}
+	    HttpServletRequest request = (HttpServletRequest) req;
+	    HttpServletResponse response = (HttpServletResponse) res;
+	    
+	    HttpSession session = request.getSession(false);
+	    String requestURI = request.getRequestURI();
+	    String contextPath = request.getContextPath();
+	    
+	    boolean loggedIn = (session != null && session.getAttribute("currentUser") != null);
+
+	    boolean isAuthJSP = requestURI.contains("/auth/");
+	    
+	    boolean isAuthServlet = requestURI.endsWith("/login") || 
+	                            requestURI.endsWith("/register") || 
+	                            requestURI.endsWith("/logout") ||
+	                            requestURI.endsWith("/reset-password");
+
+	    boolean isIndexPage = requestURI.equals(contextPath + "/") || requestURI.endsWith("/index.jsp");
+	    boolean isStaticResource = requestURI.contains("/style/") || requestURI.endsWith(".css") || 
+	                               requestURI.endsWith(".png") || requestURI.endsWith(".jpg");
+
+	    // LOGIC CHO PHÉP
+	    if (loggedIn || isAuthJSP || isAuthServlet || isIndexPage || isStaticResource) {
+	        chain.doFilter(request, response);
+	    } else {
+	        response.sendRedirect(contextPath + "/auth/login.jsp");
+	    }
 	}
 }
