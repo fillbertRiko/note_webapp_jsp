@@ -3,13 +3,14 @@ package controller;
 import java.io.IOException;
 
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import serviceDB.SHA256Hasher;
 import serviceDB.UserService;
 
+@WebServlet("/forgotPassword")
 public class ForgotPassword extends HttpServlet {
 
 	/**
@@ -18,16 +19,22 @@ public class ForgotPassword extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private UserService userService;
 	
+	public void init() throws ServletException {
+		userService = new UserService();
+	}
+	
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
 		String newPass = req.getParameter("newPassword");
-		String confirmPass = req.getParameter("comfirmPassword");
+		String confirmPass = req.getParameter("confirmPassword");
 		String username = req.getParameter("username");
 		
+		System.out.println(username.toString());
 		if(newPass != null && newPass.equals(confirmPass)) {
-			String hashedPass = SHA256Hasher.hash(newPass);
+			System.out.println(newPass.toString());
 			
-			boolean success = userService.updatePass(username, hashedPass);
+			
+			boolean success = userService.updatePass(username, newPass);
 			if(success) {
 				res.sendRedirect(req.getContextPath() + "/auth/login.jsp?msg=reset_success");
 			} else {

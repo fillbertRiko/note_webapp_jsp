@@ -51,19 +51,14 @@ public class LoginController extends HttpServlet{
 				oldSession.invalidate();
 			}
 			
-			
 			HttpSession session = req.getSession(true);
 			session.setAttribute("currentUser", user);
 			
 			res.sendRedirect(req.getContextPath() + "/note/dashboard.jsp");
 			return;
 		} else {
-			HttpSession session = req.getSession(false);
-			if(session != null) {
-				session.removeAttribute("currentUser");
-			}
-			
 			req.setAttribute("errorMessage", "Username or password wrong, please check your username or password");
+			req.setAttribute("savedUsername", username);
 			req.getRequestDispatcher("/auth/login.jsp").forward(req, res);
 		}
 	}
