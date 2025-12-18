@@ -150,4 +150,16 @@ public class UserDao {
 		
 		return documentToUser(userDoc);
 	}
+	
+	public boolean updatePassword(String userId, String hashedNewPassword) {
+		try {
+			Document filter = new Document("_id", new ObjectId(userId));
+			Document updateFields = new Document("$set", new Document("password", hashedNewPassword));
+			UpdateResult result = users.updateOne(filter, updateFields);
+			return result.getModifiedCount() >0;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
 }

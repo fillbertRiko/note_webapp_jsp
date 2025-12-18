@@ -67,4 +67,19 @@ public class UserService {
 		
 		return userDao.createUser(newUser);
 	}
+	
+	public boolean updatePass(String username, String newPassword) {
+		if(newPassword != null) {
+			return false;
+		}
+		
+		String hashedNewPassword = SHA256Hasher.hash(newPassword);
+		User user = userDao.findUserByUsername(username);
+		if(user!=null) {
+			user.setPassword(hashedNewPassword);
+			return userDao.updatePassword(username, hashedNewPassword);
+		}
+		
+		return false;
+	}
 }

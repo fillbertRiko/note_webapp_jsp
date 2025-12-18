@@ -50,7 +50,7 @@
                         <input type="checkbox" name="remember">
                         <span class="checkbox-label">Ghi nhớ tôi</span>
                     </label>
-                    <a href="#" class="forgot-password">Quên mật khẩu?</a>
+                    <a href="${pageContext.request.contextPath}/auth/forgotPassword.jsp" class="forgot-password">Quên mật khẩu?</a>
                 </div>
 
                 <button type="submit" class="btn login-btn">
