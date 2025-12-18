@@ -1,10 +1,12 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%
-    // Ngăn chặn trình duyệt lưu cache để tránh lỗi xác thực cũ
     response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     response.setHeader("Pragma", "no-cache");
     response.setDateHeader("Expires", 0);
 %>
+<% if ("register_success".equals(request.getParameter("msg"))) { %>
+    <p style="color: #4ade80;">Đăng ký thành công! Hãy đăng nhập để bắt đầu.</p>
+<% } %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -19,8 +21,6 @@
             <div class="login-header">
                 <h2>Note Basement</h2>
                 <p>Đăng nhập để tiếp tục</p>
-                
-                <%-- Hiển thị thông báo lỗi từ LoginController --%>
                 <% if (request.getAttribute("errorMessage") != null) { %>
                     <div class="error-text" style="color: #ff4d4d; margin-top: 10px; font-size: 14px;">
                         ${errorMessage}
@@ -65,15 +65,22 @@
     </div>
 
     <script>
+    function checkInput() {
         document.querySelectorAll('.input-wrapper input').forEach(input => {
-            input.addEventListener('blur', () => {
-                if (input.value.trim() !== "") {
-                    input.classList.add('has-value');
-                } else {
-                    input.classList.remove('has-value');
-                }
-            });
+            if (input.value.trim() !== "") {
+                input.classList.add('has-value');
+            } else {
+                input.classList.remove('has-value');
+            }
         });
+    }
+
+    document.querySelectorAll('.input-wrapper input').forEach(input => {
+        input.addEventListener('blur', checkInput);
+        input.addEventListener('input', checkInput);
+    });
+
+    window.onload = checkInput;
     </script>
 </body>
 </html>

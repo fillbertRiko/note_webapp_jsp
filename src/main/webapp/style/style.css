@@ -1,120 +1,172 @@
-body {font-family: Arial, Helvetica, sans-serif;}
-
-/* Full-width input fields */
-input[type=text], input[type=password] {
-  width: 100%;
-  padding: 12px 20px;
-  margin: 8px 0;
-  display: inline-block;
-  border: 1px solid #ccc;
-  box-sizing: border-box;
+:root {
+    --primary-color: #4facfe;
+    --secondary-color: #00f2fe;
+    --error-color: #ff4d4d;
+    --text-color: #333;
+    --glass-bg: rgba(255, 255, 255, 0.2);
+    --glass-border: rgba(255, 255, 255, 0.3);
 }
 
-/* Set a style for all buttons */
-button {
-  background-color: #04AA6D;
-  color: white;
-  padding: 14px 20px;
-  margin: 8px 0;
-  border: none;
-  cursor: pointer;
-  width: 100%;
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    height: 100vh;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-color);
 }
 
-button:hover {
-  opacity: 0.8;
+/* Container cho Login, Register, ForgotPass */
+.login-container {
+    width: 100%;
+    max-width: 400px;
+    padding: 20px;
 }
 
-/* Extra styles for the cancel button */
-.cancelbtn {
-  width: auto;
-  padding: 10px 18px;
-  background-color: #f44336;
+.login-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 40px;
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    text-align: center;
 }
 
-/* Center the image and position the close button */
-.imgcontainer {
-  text-align: center;
-  margin: 24px 0 12px 0;
-  position: relative;
+.login-header h2 {
+    margin: 0 0 10px;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 2px;
 }
 
-img.avatar {
-  width: 40%;
-  border-radius: 50%;
+.login-header p {
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 30px;
 }
 
-.container {
-  padding: 16px;
+/* Group Input với Label bay (Floating Label) */
+.form-group {
+    margin-bottom: 25px;
+    position: relative;
+    text-align: left;
 }
 
-span.psw {
-  float: right;
-  padding-top: 16px;
+.input-wrapper {
+    position: relative;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.5);
 }
 
-/* The Modal (background) */
-.modal {
-  display: none; /* Hidden by default */
-  position: fixed; /* Stay in place */
-  z-index: 1; /* Sit on top */
-  left: 0;
-  top: 0;
-  width: 100%; /* Full width */
-  height: 100%; /* Full height */
-  overflow: auto; /* Enable scroll if needed */
-  background-color: rgb(0,0,0); /* Fallback color */
-  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
-  padding-top: 60px;
+.input-wrapper input {
+    width: 100%;
+    padding: 10px 0;
+    background: none;
+    border: none;
+    outline: none;
+    color: white;
+    font-size: 16px;
 }
 
-/* Modal Content/Box */
-.modal-content {
-  background-color: #fefefe;
-  margin: 5% auto 15% auto; /* 5% from the top, 15% from the bottom and centered */
-  border: 1px solid #888;
-  width: 80%; /* Could be more or less, depending on screen size */
+.input-wrapper label {
+    position: absolute;
+    top: 10px;
+    left: 0;
+    color: rgba(255, 255, 255, 0.7);
+    transition: 0.3s ease all;
+    pointer-events: none;
 }
 
-/* The Close Button (x) */
-.close {
-  position: absolute;
-  right: 25px;
-  top: 0;
-  color: #000;
-  font-size: 35px;
-  font-weight: bold;
+/* Hiệu ứng khi focus hoặc có giá trị */
+.input-wrapper input:focus ~ label,
+.input-wrapper input.has-value ~ label {
+    top: -15px;
+    font-size: 12px;
+    color: white;
 }
 
-.close:hover,
-.close:focus {
-  color: red;
-  cursor: pointer;
+.focus-border {
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background-color: white;
+    transition: 0.4s;
 }
 
-/* Add Zoom Animation */
-.animate {
-  -webkit-animation: animatezoom 0.6s;
-  animation: animatezoom 0.6s
+.input-wrapper input:focus ~ .focus-border {
+    width: 100%;
 }
 
-@-webkit-keyframes animatezoom {
-  from {-webkit-transform: scale(0)} 
-  to {-webkit-transform: scale(1)}
-}
-  
-@keyframes animatezoom {
-  from {transform: scale(0)} 
-  to {transform: scale(1)}
+/* Button phong cách hiện đại */
+.login-btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 25px;
+    background: white;
+    color: var(--primary-color);
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.3s;
+    margin-top: 10px;
 }
 
-/* Change styles for span and cancel button on extra small screens */
-@media screen and (max-width: 300px) {
-  span.psw {
-     display: block;
-     float: none;
-  }
-  .cancelbtn {
-     width: 100%;
-  }
+.login-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    background: #f0f0f0;
+}
+
+/* Link điều hướng */
+.form-options, .signup-link {
+    margin-top: 20px;
+    font-size: 14px;
+    color: white;
+}
+
+.form-options a, .signup-link a {
+    color: white;
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+/* Error Text */
+.error-text {
+    background: rgba(255, 77, 77, 0.2);
+    padding: 8px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+/* Dashboard / Index Styles */
+.dashboard-container {
+    width: 90%;
+    max-width: 1000px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    padding: 30px;
+    color: white;
+    border: 1px solid var(--glass-border);
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--glass-border);
+    padding-bottom: 15px;
+}
+
+.btn-logout {
+    background: #ff4d4d;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
 }

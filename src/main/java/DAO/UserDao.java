@@ -151,13 +151,14 @@ public class UserDao {
 		return documentToUser(userDoc);
 	}
 	
-	public boolean updatePassword(String userId, String hashedNewPassword) {
+	public boolean updatePassword(String username, String hashedNewPassword) {
 		try {
-			Document filter = new Document("_id", new ObjectId(userId));
+			Document filter = new Document("username", username);
 			Document updateFields = new Document("$set", new Document("password", hashedNewPassword));
 			UpdateResult result = users.updateOne(filter, updateFields);
 			return result.getModifiedCount() >0;
 		} catch (Exception e) {
+			System.err.println("Error when update password for user: " + username);
 			e.printStackTrace();
 			return false;
 		}

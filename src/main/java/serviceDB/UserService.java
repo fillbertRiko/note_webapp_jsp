@@ -26,60 +26,59 @@ public class UserService {
 		if(user != null) {
 			String hashedInputPassword = SHA256Hasher.hash(password);
 			String storedHasherPassword = user.getPassword();
-			System.out.println(hashedInputPassword.toString());
+//			System.out.println(hashedInputPassword.toString());
 			
 			if(hashedInputPassword.equals(storedHasherPassword)) {
 				System.out.println("Login successfully: " + username);
 				return user;
 			} else {
 				System.out.println("Wrong password");
+				return null;
 			}
-			return null;
-		} else {
-			System.out.println("Cannot found user");
 		}
 		return null;
 	}
 	
 	public boolean deleteUser(String userId) {
-		postDao.deletePostsByUserId(userId);
-		topicDao.deleteTopicsByUserId(userId);
-		scheduleDao.deleteSchedulesByUserId(userId);
-		inviteDao.deleteFriendInviteByUserId(userId);
-		friendshipDao.deleteRelationshipByUserId(userId);
-		userDao.deleteUser(userId);
-		
-		return true;
+		try {
+			postDao.deletePostsByUserId(userId);
+			topicDao.deleteTopicsByUserId(userId);
+			scheduleDao.deleteSchedulesByUserId(userId);
+			inviteDao.deleteFriendInviteByUserId(userId);
+			friendshipDao.deleteRelationshipByUserId(userId);
+			userDao.deleteUser(userId);
+			
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 	
 	public User register(User newUser) {
-		String userAccount = newUser.getUsername();
-		String emailAccount = newUser.getEmail();
-		String rawPassword = newUser.getPassword();
-		String hashPassword = SHA256Hasher.hash(rawPassword);
-		newUser.setPassword(hashPassword);
-		
-		User existingUser = userDao.findUserByUsernameOrEmail(userAccount, emailAccount);
-		
-		if(existingUser != null) {
+		User exitingUser = userDao.findUserByUsernameOrEmail(newUser.getUsername(), newUser.getEmail());
+		if(exitingUser != null) {
 			return null;
 		}
+		
+		String hashPassword = SHA256Hasher.hash(newUser.getPassword());
+		newUser.setPassword(hashPassword);
 		
 		return userDao.createUser(newUser);
 	}
 	
 	public boolean updatePass(String username, String newPassword) {
-		if(newPassword != null) {
+		if(newPassword == null || newPassword.trim().isEmpty()) {
 			return false;
 		}
 		
 		String hashedNewPassword = SHA256Hasher.hash(newPassword);
 		User user = userDao.findUserByUsername(username);
+		System.out.println(username.toString());
 		if(user!=null) {
-			user.setPassword(hashedNewPassword);
+//			user.setPassword(hashedNewPassword);
 			return userDao.updatePassword(username, hashedNewPassword);
 		}
-		
 		return false;
 	}
 }
