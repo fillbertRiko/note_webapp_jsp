@@ -49,7 +49,7 @@ public class AuthFilter implements Filter {
 	                            requestURI.endsWith("/logout") ||
 	                            requestURI.endsWith("/forgotPassword");
 
-	    boolean isIndexPage = requestURI.equals(contextPath + "/") || requestURI.endsWith("/index.jsp");
+	    boolean isIndexPage = requestURI.equals(contextPath + "/") || requestURI.endsWith("/index.jsp") || requestURI.endsWith(contextPath);
 	    boolean isStaticResource = requestURI.contains("/style/") || requestURI.endsWith(".css") || 
 	                               requestURI.endsWith(".png") || requestURI.endsWith(".jpg");
 

@@ -1,21 +1,28 @@
 package DAO;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 
-import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 
 import model.Post;
 
+///Tao Document truy xuat va truy van nguoc ve DB
+///Tao muc CRUD de lam viec voi du lieu bai viet (Post)
+///hien tai bai viet duoc bao ve thong qua role nen can tao cac ham tim kiem co dieu kien de loc ra, tranh bi chong cheo
+///muc update se duoc update theo id va loc de tranh viec user khasc cung co the update duoc
+///muc delete se chi duoc xoa boi chinh nguoi dung da tao ra bai viet
 public class PostDAO {
 	private final MongoCollection<Document> posts;
 	
@@ -27,7 +34,7 @@ public class PostDAO {
 	private Post documentToPost(Document doc) {
 		if(doc == null) return null;
 		
-		Post post = new Post(
+		return new Post(
 				doc.getObjectId("_id").toHexString(),
 				doc.getString("userId"),
 				doc.getString("topicId"),
@@ -39,73 +46,13 @@ public class PostDAO {
 				doc.getString("allowComment"), 
 				doc.getDate("month"),
 				doc.getDate("year"));
-		return post;
 	}
 	
-	public Post findPostByUser(String userId) {
-		Document query = new Document("_id", new ObjectId(userId));
-		Document postDoc = posts.find(query).first();
-		
-		if(postDoc == null) return null;
-		
-		return documentToPost(postDoc);
-	}
-	
-	public Post findByMonth(String userId, Date month, Date year) {
-		Document query = new Document("_id", new ObjectId(userId));
-		Document postDoc = posts.find(query).first();
-		
-		if(postDoc == null)	return null;
-		
-		return documentToPost(postDoc);
-	}
-	
-	public Post findPublicPost(String allowComment) {
-		Document query = new Document("_id", new ObjectId(allowComment));
-		FindIterable<Document> postDoc = posts.find(query).max(query);
-		
-		if(postDoc == null) return null;
-		
-		return documentToPost((Document) postDoc);
-	}
-	
-	public List<Post> readAllPost() {
-		List<Post> postList = new ArrayList<>();
-		try (MongoCursor<Document> cursor = posts.find().iterator()) {
-			while(cursor.hasNext()) {
-				Document postDoc = cursor.next();
-				postList.add(documentToPost(postDoc));
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return postList;
-	}
-	
-	public boolean updatePost(Post post) {
-		if(post.getId() == null) {
-			System.err.println("Error: Cannot update Post, cannot find ID.");
-			return false;
-		}
-		
-		try {
-			Document filter = new Document("_id", new ObjectId(post.getId()));
-			Document updateFields = new Document("$set", new Document())
-					.append("title", post.getTitle())
-					.append("content", post.getContent())
-					.append("allowCommend", post.getNumberAllowComment());
-			
-			UpdateResult result = posts.updateOne(filter, updateFields);
-			return result.getModifiedCount() > 0;
-		} catch(Exception e) {
-			System.err.println("Error when update post by user ID: " + post.getUserId());
-			e.printStackTrace();
-			return false;
-		}
-	}
-	
-	public void createPost(Post post) {
-		Document postDoc = new Document("_id", new ObjectId())
+	/*CURD*/
+	///Create
+	public boolean createPost(Post post) {
+		ObjectId newId = new ObjectId();
+		Document postDoc = new Document("_id", newId)
 				.append("userId", post.getUserId())
 				.append("topicId", post.getTopicId())
 				.append("title", post.getTitle())
@@ -116,53 +63,129 @@ public class PostDAO {
 				.append("allowComment", post.getNumberAllowComment());
 		try {
 			posts.insertOne(postDoc);
+			post.setId(newId.toHexString());
 			System.out.println("Post created with user ID: " + post.getUserId() + "\n And post have title: " + post.getTitle());
+			return true;
 		} catch (Exception e) {
 			e.printStackTrace();
+			System.err.println("Error when create post: " + e.getMessage());
+			return false;
 		}
 	}
 	
-	public boolean deletePost(String id) {
+	///Read
+	public Post findPostByUserId(String postId) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	public List<Post> findByMonth(String userId, int month, int year) {
+		List<Post> list = new ArrayList<>();
+		Calendar cal = Calendar.getInstance();
+		cal.set(month -1,1,0,0,0, year);
+		Date startDate = cal.getTime();
+		
+		cal.add(Calendar.MONTH, 1);
+		Date endDate = cal.getTime();
+		
+		Bson filter = Filters.and(
+				Filters.eq("userId", userId),
+				Filters.gte("createdAt", startDate),
+				Filters.lt("createdAt", endDate));
+		
+		try (MongoCursor<Document> cursor = posts.find(filter).iterator()) {
+			while(cursor.hasNext()) {
+				Document doc = cursor.next();
+				
+				Post postObject = documentToPost(doc);
+				list.add(postObject);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.err.println("Cannot find UserID: " + userId);
+		}
+		return list;
+	}
+	
+	public List<Post> findPostsVisibleTouser(String ownerId, List<String> allowAccessLevels, String viewerId){
+		List<Post> list = new ArrayList<>();
+		
+		Bson filter = Filters.and(
+				Filters.eq("userId", ownerId),
+				Filters.or(
+						Filters.and(
+								Filters.in("accessLevelId", allowAccessLevels),
+								Filters.ne("accessLevelId", "PROTECTED_1")
+								),
+						Filters.and(
+								Filters.in("accessLevelId", "PROTECTED_1"),
+								Filters.ne("accessLevelId", viewerId)
+								)
+						)
+				);
+		try(MongoCursor<Document> cursor = posts.find(filter)
+				.sort(new Document("createdAt", -1))
+				.iterator()) {
+			while(cursor.hasNext()) {
+				Document doc = cursor.next();
+				list.add(documentToPost(doc));
+			}
+		} catch (Exception e) {
+			System.err.println("Have error when take post " + e.getMessage());
+			e.printStackTrace();
+		}
+		
+		return list;
+	}
+	
+	///Update
+	public boolean updatePost(Post post) {
+		if(post.getId() == null) {
+			System.err.println("Error: Cannot update Post, cannot find ID.");
+			return false;
+		}
+		
 		try {
-			Document filter = new Document("_id", new ObjectId(id));
+			Bson filter = Filters.and(
+					Filters.eq("_id", new ObjectId(post.getId())),
+					Filters.eq("userId", post.getUserId()));
+			Document updateFields = new Document("$set", new Document())
+					.append("title", post.getTitle())
+					.append("content", post.getContent())
+					.append("updatedAt", new Date())
+					.append("accessLevelId", post.getAccessLevelId())
+					.append("allowComment", post.getNumberAllowComment());
+			
+			UpdateResult result = posts.updateOne(filter, updateFields);
+			return result.getModifiedCount() > 0;
+		} catch(Exception e) {
+			System.err.println("Error when update post by user ID: " + post.getUserId());
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	///Delete
+	public boolean deletePost(String postId, String currentUserId) {
+		try {
+			Bson filter = Filters.and(
+					Filters.eq("_id", new ObjectId(postId)),
+					Filters.eq("userId", currentUserId));
 			DeleteResult result = posts.deleteOne(filter);
 			return result.getDeletedCount() == 1;
 		} catch (IllegalArgumentException e) {
-			System.err.println("Error: ID post unexcepted" + id);
+			System.err.println("Error: ID post unexcepted" + postId);
 			return false;
 		} catch(Exception e) {
-			System.err.println("Error when delete Post by ID: " + id);
+			System.err.println("Error when delete Post by ID: " + postId);
 			e.printStackTrace();
 			return false;
 		}
 	}
-	
-	public boolean deletePostsByUserId(String userId) {
-		try {
-			Document filter = new Document("userId", new ObjectId(userId));
-			DeleteResult result = posts.deleteMany(filter);
-			return result.getDeletedCount() >0;
-		} catch (IllegalArgumentException e) {
-			System.err.println("Error: ID user not found" + userId);
-			return false;
-		} catch(Exception e) {
-			System.err.println("Error when delete Post by UserID: " + userId);
-			e.printStackTrace();
-			return false;
-		}
-	}
-	
-	public Post findPostByTitle(String title) {
-		Document query = new Document("title", title);
-		Document postDoc = posts.find(query).first();
+
+	public void deletePostsByUserId(String userId) {
+		// TODO Auto-generated method stub
 		
-		return documentToPost(postDoc);
 	}
-	
-	public Post findPostByUserId(String userId) {
-		Document query = new Document("userId", userId);
-		Document postDoc = posts.find(query).first();
-		
-		return documentToPost(postDoc);
-	}
+
 }
