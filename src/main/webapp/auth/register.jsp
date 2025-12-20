@@ -6,15 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng ký - Note Basement</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/style/style.css">
+    <script src="${pageContext.request.contextPath}/script/script.jsp"></script>
 </head>
-<body>
+<body class="auth-body">
     <div class="login-container">
         <div class="login-card">
             <div class="login-header">
                 <h2>Note Basement</h2>
                 <p>Tạo tài khoản mới</p>
-                
-                <%-- Hiển thị lỗi nếu đăng ký thất bại (trùng username/email) --%>
                 <% if (request.getAttribute("errorMessage") != null) { %>
                     <div class="error-text" style="color: #ff4d4d; margin-top: 10px; font-size: 14px;">
                         ${errorMessage}
@@ -61,16 +60,5 @@
             </div>
         </div>
     </div>
-
-    <script>
-        document.querySelectorAll('.input-wrapper input').forEach(input => {
-            const check = () => {
-                if (input.value.trim() !== "") input.classList.add('has-value');
-                else input.classList.remove('has-value');
-            };
-            input.addEventListener('blur', check);
-            input.addEventListener('input', check);
-        });
-    </script>
 </body>
 </html>

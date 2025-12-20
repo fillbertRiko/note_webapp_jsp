@@ -14,8 +14,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng nhập - Note Basement</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/style/style.css">
+    <script src="${pageContext.request.contextPath}/script/script.jsp"></script>
 </head>
-<body>
+<body class="auth-body">
     <div class="login-container">
         <div class="login-card">
             <div class="login-header">
@@ -63,24 +64,5 @@
             </div>
         </div>
     </div>
-
-    <script>
-    function checkInput() {
-        document.querySelectorAll('.input-wrapper input').forEach(input => {
-            if (input.value.trim() !== "") {
-                input.classList.add('has-value');
-            } else {
-                input.classList.remove('has-value');
-            }
-        });
-    }
-
-    document.querySelectorAll('.input-wrapper input').forEach(input => {
-        input.addEventListener('blur', checkInput);
-        input.addEventListener('input', checkInput);
-    });
-
-    window.onload = checkInput;
-    </script>
 </body>
 </html>
