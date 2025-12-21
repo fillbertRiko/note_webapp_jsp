@@ -56,6 +56,23 @@ public class FriendInviteDAO {
 		return documentToFriendInvite(friendInviteDoc);
 	}
 	
+	public List<FriendInvites> checkStatus(String status) {
+		List<FriendInvites> friendInviteStatus = new ArrayList<>();
+		Bson filter = Filters.eq("status", status);
+		
+		try(MongoCursor<Document> cursor = friendInvites.find(filter).iterator()){
+			while(cursor.hasNext()) {
+				Document friendInviteDoc = cursor.next();
+				friendInviteStatus.add(documentToFriendInvite(friendInviteDoc));
+			}
+		} catch (Exception e) {
+			System.err.println("Error, can't find status");
+			e.printStackTrace();
+		}
+		
+		return friendInviteStatus;
+	}
+	
 
 	public List<FriendInvites> readAllInvites(){
 		List<FriendInvites> friendInvitesList = new ArrayList<>();
