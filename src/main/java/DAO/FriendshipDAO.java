@@ -1,14 +1,10 @@
 package DAO;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.result.DeleteResult;
@@ -44,29 +40,17 @@ public class FriendshipDAO {
 		return friendship;
 	}
 
-	public Friendship findRelationshipById(String id){
-		Document query = new Document("_id", new ObjectId(id));
-		Document friendshipDoc = friendships.find(query).first();
-		
-		if(friendshipDoc == null) {
-			return null;
-		}
-		
-		return documentToFriendship(friendshipDoc);
-	}
-	
-
-	public List<Friendship> readAllRelationship(){
-		List<Friendship> friendshipsList = new ArrayList<>();
-		try (MongoCursor<Document> cursor = friendships.find().iterator()) {
-			while(cursor.hasNext()) {
-				Document friendshipDoc = cursor.next();
-				friendshipsList.add(documentToFriendship(friendshipDoc));
-			}
-		} catch(Exception e) {
-			e.printStackTrace();
-		} 
-		return friendshipsList;
+	///CURD
+	///Read
+	public boolean checkFriendship(String userId1, String userId2) {
+		Bson filter = Filters.or(
+				Filters.and(
+						Filters.eq("userId1", userId1),
+						Filters.eq("userId2", userId2)),
+				Filters.and(
+						Filters.eq("userId1", userId2),
+						Filters.eq("userId2", userId1)));
+		return friendships.countDocuments(filter) >0;
 	}
 
 	public boolean updateFriendship(Friendship friendship){

@@ -44,6 +44,7 @@ public class PostDAO {
 				doc.getDate("updatedAt"),
 				doc.getString("accessLevelId"),
 				doc.getString("allowComment"), 
+				doc.getList("allowViewer", null),
 				doc.getDate("month"),
 				doc.getDate("year"));
 	}
@@ -60,6 +61,7 @@ public class PostDAO {
 				.append("createdAt", post.getTimeCreate())
 				.append("updatedAt", post.getTimeUpdate())
 				.append("accessLevelId", post.getAccessLevelId())
+				.append("allowViewer", post.getAllowViewer())
 				.append("allowComment", post.getNumberAllowComment());
 		try {
 			posts.insertOne(postDoc);
@@ -74,9 +76,46 @@ public class PostDAO {
 	}
 	
 	///Read
-	public Post findPostByUserId(String postId) {
-		// TODO Auto-generated method stub
-		return null;
+	public List<Post> findMyPost(String currentUserId, int page) {
+		List<Post> list = new ArrayList<>();
+		int pageSize = 10;
+		int skipValue = (page-1)*pageSize; 
+		Bson filter = Filters.eq("userId", currentUserId);
+		
+		try(MongoCursor<Document> cursor = posts.find(filter)
+				.sort(new Document("createdAt", -1))
+				.skip(skipValue)
+				.limit(pageSize)
+				.iterator()){
+			while(cursor.hasNext()) {
+				list.add(documentToPost(cursor.next()));
+			}
+		} catch (Exception e) {
+			System.err.println("Error when loading Note: " + e.getMessage());
+			e.printStackTrace();
+		}
+		
+		return list;
+	}
+	
+	public Post findPostByUserId(String postId, String currentUserId) {
+		try {
+			Bson filter = Filters.and(
+					Filters.eq("_id", new ObjectId(postId)),
+					Filters.eq("userId", currentUserId));
+			
+			Document postDoc = posts.find(filter).first();
+			
+			if(postDoc == null) {
+				System.out.println("Can't found post");
+				return null;
+			}
+			
+			return documentToPost(postDoc);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 	
 	public List<Post> findByMonth(String userId, int month, int year) {
@@ -107,24 +146,24 @@ public class PostDAO {
 		return list;
 	}
 	
-	public List<Post> findPostsVisibleTouser(String ownerId, List<String> allowAccessLevels, String viewerId){
+	public List<Post> findPostsVisibleToUser(String ownerId, List<String> allowAccessLevels, int page, String viewerId){
 		List<Post> list = new ArrayList<>();
+		int pageSize = 10;
+		int skipValue = (page-1)*pageSize; 
 		
 		Bson filter = Filters.and(
 				Filters.eq("userId", ownerId),
 				Filters.or(
+						Filters.in("accessLevelId", allowAccessLevels),
 						Filters.and(
-								Filters.in("accessLevelId", allowAccessLevels),
-								Filters.ne("accessLevelId", "PROTECTED_1")
-								),
-						Filters.and(
-								Filters.in("accessLevelId", "PROTECTED_1"),
-								Filters.ne("accessLevelId", viewerId)
-								)
+								Filters.eq("accessLevelId", "PROTECTED_1"),
+								Filters.eq("allowViewerId", viewerId))
 						)
 				);
 		try(MongoCursor<Document> cursor = posts.find(filter)
 				.sort(new Document("createdAt", -1))
+				.skip(skipValue)
+				.limit(pageSize)
 				.iterator()) {
 			while(cursor.hasNext()) {
 				Document doc = cursor.next();

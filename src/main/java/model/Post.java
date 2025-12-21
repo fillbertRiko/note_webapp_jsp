@@ -1,6 +1,7 @@
 package model;
 
 import java.util.Date;
+import java.util.List;
 
 public class Post {
 	private String id;
@@ -14,12 +15,13 @@ public class Post {
 	private Date updatedAt;
 	private String accessLevelId;
 	private String allowComment;
+	private List<String> allowViewer;
 
 	public Post() {
 		
 	}
 
-	public Post(String id, String userId, String topicId, String title, String content, Date createdAt, Date updatedAt, String accessLevelId, String allowComment, Date month, Date year) {
+	public Post(String id, String userId, String topicId, String title, String content, Date createdAt, Date updatedAt, String accessLevelId, String allowComment, List<String> allowViewer, Date month, Date year) {
 		super();
 		this.id = id;
 		this.userId = userId;
@@ -32,15 +34,17 @@ public class Post {
 		this.updatedAt = updatedAt;
 		this.accessLevelId = accessLevelId;
 		this.allowComment = allowComment;
+		this.allowViewer = allowViewer;
 	}
 	
-	public Post(String userId, String topicId, String title, String content, String accessLevelId, String allowComment, Date month, Date year) {
+	public Post(String userId, String topicId, String title, String content, String accessLevelId, String allowComment, Date month, Date year, List<String> allowViewer) {
 		this.userId = userId;
 		this.topicId = topicId;
 		this.title = title;
 		this.content = content;
 		this.accessLevelId = accessLevelId;
 		this.allowComment = allowComment;
+		this.allowViewer = allowViewer;
 		this.createdAt = new Date();
 		this.updatedAt = new Date();
 		this.month = new Date();
@@ -133,5 +137,13 @@ public class Post {
 	
 	public void setYear(Date year) {
 		this.year = year;
+	}
+	
+	public List<String> getAllowViewer() {
+		return allowViewer;
+	}
+	
+	public void setAllowViewer(List<String> allowViewer) {
+		this.allowViewer = allowViewer;
 	}
 }
