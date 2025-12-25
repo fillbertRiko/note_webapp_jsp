@@ -13,6 +13,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 
@@ -33,6 +34,7 @@ public class PostDAO {
 	
 	private Post documentToPost(Document doc) {
 		if(doc == null) return null;
+//		System.out.println(doc.toString());
 		
 		return new Post(
 				doc.getObjectId("_id").toHexString(),
@@ -43,8 +45,8 @@ public class PostDAO {
 				doc.getDate("createdAt"),
 				doc.getDate("updatedAt"),
 				doc.getString("accessLevelId"),
-				doc.getString("allowComment"), 
-				doc.getList("allowViewer", null),
+				doc.getString("allowComment"),
+				doc.getList("allowViewer", String.class),
 				doc.getDate("month"),
 				doc.getDate("year"));
 	}
@@ -79,7 +81,7 @@ public class PostDAO {
 	public List<Post> findMyPost(String currentUserId, int page) {
 		List<Post> list = new ArrayList<>();
 		int pageSize = 10;
-		int skipValue = (page-1)*pageSize; 
+		int skipValue = (page-1)*pageSize;
 		Bson filter = Filters.eq("userId", currentUserId);
 		
 		try(MongoCursor<Document> cursor = posts.find(filter)
@@ -146,21 +148,35 @@ public class PostDAO {
 		return list;
 	}
 	
-	public List<Post> findPostsVisibleToUser(String ownerId, List<String> allowAccessLevels, int page, String viewerId){
+	public List<Post> findPostsVisibleToUser(String ownerId, List<String> allowAccessLevels, int page, String viewerId, String keyword){
 		List<Post> list = new ArrayList<>();
+		System.out.println("DEBUG: OwnerId: " + ownerId);
 		int pageSize = 10;
-		int skipValue = (page-1)*pageSize; 
+		int skipValue = (page-1)*pageSize;
 		
-		Bson filter = Filters.and(
+		Bson filterAccess = Filters.and(
 				Filters.eq("userId", ownerId),
 				Filters.or(
 						Filters.in("accessLevelId", allowAccessLevels),
 						Filters.and(
 								Filters.eq("accessLevelId", "PROTECTED_1"),
-								Filters.eq("allowViewerId", viewerId))
+								Filters.eq("allowViewer", viewerId))
 						)
 				);
-		try(MongoCursor<Document> cursor = posts.find(filter)
+		
+		Bson searchFilter = new Document();
+	    
+	    if (keyword != null && !keyword.trim().isEmpty()) {
+	        searchFilter = Filters.or(
+	            Filters.regex("title", ".*" + java.util.regex.Pattern.quote(keyword) + ".*", "i"),
+	            Filters.regex("content", ".*" + java.util.regex.Pattern.quote(keyword) + ".*", "i")
+	        );
+	    }
+	    
+	    if (!searchFilter.toBsonDocument().isEmpty()) {
+	       filterAccess = Filters.and(filterAccess, searchFilter);
+	    }
+		try(MongoCursor<Document> cursor = posts.find(filterAccess)
 				.sort(new Document("createdAt", -1))
 				.skip(skipValue)
 				.limit(pageSize)
@@ -188,14 +204,15 @@ public class PostDAO {
 			Bson filter = Filters.and(
 					Filters.eq("_id", new ObjectId(post.getId())),
 					Filters.eq("userId", post.getUserId()));
-			Document updateFields = new Document("$set", new Document())
-					.append("title", post.getTitle())
-					.append("content", post.getContent())
-					.append("updatedAt", new Date())
-					.append("accessLevelId", post.getAccessLevelId())
-					.append("allowComment", post.getNumberAllowComment());
-			
-			UpdateResult result = posts.updateOne(filter, updateFields);
+			List<Bson> updates = new ArrayList<>();
+	        updates.add(Updates.set("title", post.getTitle()));
+	        updates.add(Updates.set("content", post.getContent()));
+	        updates.add(Updates.set("updatedAt", new Date()));
+	        updates.add(Updates.set("accessLevelId", post.getAccessLevelId()));
+	        updates.add(Updates.set("allowViewer", post.getAllowViewer()));
+	        updates.add(Updates.set("allowComment", post.getNumberAllowComment()));
+			Bson updateOperation = Updates.combine(updates);
+			UpdateResult result = posts.updateOne(filter, updateOperation);
 			return result.getModifiedCount() > 0;
 		} catch(Exception e) {
 			System.err.println("Error when update post by user ID: " + post.getUserId());

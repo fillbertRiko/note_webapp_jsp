@@ -24,10 +24,12 @@ public class LogoutController extends HttpServlet{
 		HttpSession session = req.getSession(false);
 		
 		if(session != null) {
-			session.removeAttribute("currentUser");
 			session.invalidate();
 		}
-//		System.out.println("currentUser");
-        res.sendRedirect(req.getContextPath() + "/auth/login.jsp");
+//		System.out.println("logout");
+		res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+		res.setHeader("Pragma", "no-cache");
+		res.setDateHeader("Expries", 0);
+        res.sendRedirect(req.getContextPath() + "/login");
 	}
 }

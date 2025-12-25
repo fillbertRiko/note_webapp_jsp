@@ -14,6 +14,7 @@ import javax.servlet.http.HttpSession;
 
 import model.Post;
 import model.User;
+import serviceDB.FriendService;
 import serviceDB.PostService;
 
 @WebServlet("/dashboard-note")
@@ -23,13 +24,14 @@ public class NoteController extends HttpServlet {
 	 */
 	private static final long serialVersionUID = 1L;
 	private PostService postService = new PostService();
+	private FriendService friendService = new FriendService();
 	
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
 		req.setCharacterEncoding("UTF-8");
 		String action = req.getParameter("action");
 		
-		if(action != null) {
+		if(action == null) {
 			action = "view-wall";
 		}
 		
@@ -37,30 +39,45 @@ public class NoteController extends HttpServlet {
 		case "view-wall":
 			showWall(req,res);
 			break;
-		case "edit":
-			editWall(req,res);
+		case "get-posts-html":
+			loadPostJson(req,res);
 			break;
 		default:
 			showWall(req, res);
 			break;
 		}
 	}
-	
-	private void editWall(HttpServletRequest req, HttpServletResponse res) {
+
+	private void loadPostJson(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
 		// TODO Auto-generated method stub
-		
+		HttpSession session = req.getSession(false);
+	    User currentUser = (User) session.getAttribute("currentUser");
+	    System.out.println(currentUser);
+	    if(currentUser == null) return;
+	    String ownerId = req.getParameter("_id");
+	    if(ownerId == null) ownerId = currentUser.getId();
+	    
+	    String keyword = req.getParameter("search");
+	    if(keyword == null) keyword = "";
+	    List<Post> listPosts = postService.getPostByVisitor(ownerId, currentUser.getId(), 1, keyword);
+	    
+	    req.setAttribute("listPosts", listPosts);
+	    req.setAttribute("currentUser", currentUser);
+	    req.getRequestDispatcher("/note/post-list-fragment.jsp").forward(req, res);
 	}
 
 	private void showWall(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
 		HttpSession session = req.getSession();
 		User currentUser = (User) session.getAttribute("currentUser");
+		String keyword = req.getParameter("search");
+	    if(keyword == null) keyword = "";
 		
 		if(currentUser == null) {
 			res.sendRedirect(req.getContextPath() + "/login");
 			return;
 		}
 		
-		String ownerId = req.getParameter("id");
+		String ownerId = req.getParameter("_id");
 		if(ownerId == null || ownerId.isEmpty()) {
 			ownerId = currentUser.getId();
 		}
@@ -73,11 +90,13 @@ public class NoteController extends HttpServlet {
 			page =1;
 		}
 		
-		List<Post> listPosts = postService.getPostByVisitor(ownerId, ownerId, page);
+		List<Post> listPosts = postService.getPostByVisitor(ownerId, currentUser.getId(), page, keyword);
+		List<?> friendList = friendService.getFriendOfUser(ownerId);
 		
+		req.setAttribute("friendList", friendList);
 		req.setAttribute("listPosts", listPosts);
 		req.setAttribute("ownerId", ownerId);
-		req.setAttribute("page", page);
+		req.setAttribute("currentPage", page);
 		
 		req.getRequestDispatcher("/note/dashboard.jsp").forward(req, res);
 	}
@@ -91,6 +110,8 @@ public class NoteController extends HttpServlet {
 			createPost(req,res);
 		} else if("delete".equals(action)) {
 			deletePost(req,res);
+		} else if("edit".equals(action)) {
+			updatePost(req,res);
 		}
 	}
 
@@ -140,9 +161,48 @@ public class NoteController extends HttpServlet {
 		boolean isDeleted = postService.deleteMyPost(postId, currentUser.getId());
 		
 		if(isDeleted) {
-			res.sendRedirect(req.getContextPath() + "dashboard-note?action=view-wall&id=" + currentUser.getId());
+			res.sendRedirect(req.getContextPath() + "/dashboard-note?action=view-wall&id=" + currentUser.getId());
 		} else {
 			res.sendRedirect(req.getContextPath() + "error");
 		}
 	}
+	
+	private void updatePost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException{
+		req.setCharacterEncoding("UTF-8");
+		HttpSession session = req.getSession();
+		User currentUser = (User) session.getAttribute("currentUser");
+		if(currentUser == null) {
+			res.sendRedirect(req.getContextPath() + "/login");
+			return;
+		}
+
+		String postId = req.getParameter("_id");
+        String title = req.getParameter("title");
+        String content = req.getParameter("content");
+        String topicId = req.getParameter("topicId");
+        String accessLevelId = req.getParameter("accessLevelId");
+        String allowCommentStatus = req.getParameter("allowComment");
+        
+		String[] viewerArray = req.getParameterValues("allowViewer");
+		List<String> allowViewerId = new ArrayList<>();
+		if(viewerArray != null) {
+			allowViewerId = Arrays.asList(viewerArray);
+		}
+		
+		Post updatedInfo = new Post();
+        updatedInfo.setTitle(title);
+        updatedInfo.setContent(content);
+        updatedInfo.setTopicId(topicId);
+        updatedInfo.setAccessLevelId(accessLevelId);
+        updatedInfo.setNumberAllowComment(allowCommentStatus);
+        updatedInfo.setAllowViewer(allowViewerId);
+		boolean isEdit = postService.editPost(postId, currentUser.getId(), updatedInfo);
+		System.out.println(isEdit);
+		
+		if(isEdit) {
+			res.sendRedirect(req.getContextPath() + "/dashboard-note?action=view-wall&id=" + currentUser.getId());
+		} else {
+			res.sendRedirect(req.getContextPath() + "error");
+		}
+	} 
 }

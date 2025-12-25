@@ -26,29 +26,31 @@ public class PostService {
 		exitingPost.setTitle(updatedInfo.getTitle());
 		exitingPost.setContent(updatedInfo.getContent());
 		exitingPost.setAccessLevelId(updatedInfo.getAccessLevelId());
+		exitingPost.setAllowViewer(updatedInfo.getAllowViewer());
 		exitingPost.setNumberAllowComment(updatedInfo.getNumberAllowComment());
 		
 		return postDao.updatePost(exitingPost);
 	}
 	
 	///Read
-	public List<Post> getOwnPost(String currentUserId, int page){
-		return postDao.findMyPost(currentUserId, page);
-	}
-	
-	public List<Post> getPostByVisitor(String ownerId, String viewerId, int page){
-		if(ownerId.equals(viewerId)) {
-			return getOwnPost(ownerId, page);
-		}
-		
+	public List<Post> getPostByVisitor(String ownerId, String viewerId, int page, String keyword){
 		List<String> allowedLevels = new ArrayList<>();
+		System.out.println("DEBUG: Test DAO by ownerid" + ownerId);
 		allowedLevels.add("PUBLIC");
 		
-		if(friendshipDao.checkFriendship(ownerId, viewerId)) {
+		if(ownerId.equals(viewerId)) {
+			allowedLevels.add("PRIVATE");
+			allowedLevels.add("PROTECTED_1");
 			allowedLevels.add("PROTECTED_2");
+			System.out.println("DEBUG: see full post by owner");
+		} else {
+			System.out.println("DEBUG: Viewer: " + viewerId );
+			if(friendshipDao.checkFriendship(ownerId, viewerId)) {
+				allowedLevels.add("PROTECTED_2");
+			}
 		}
 		
-		return postDao.findPostsVisibleToUser(ownerId, allowedLevels, page, viewerId);
+		return postDao.findPostsVisibleToUser(ownerId, allowedLevels, page, viewerId, keyword);
 	}
 	
 	///Create
