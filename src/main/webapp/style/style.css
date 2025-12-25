@@ -2,64 +2,87 @@
    1. VARIABLES & GLOBAL RESET
    ========================================= */
 :root {
+    /* Main Theme Colors */
     --primary-color: #4facfe;
     --secondary-color: #00f2fe;
-    --error-color: #ff4d4d;
     --text-color: #333;
+    --error-color: #ff4d4d;
+    --success-color: #4ade80;
+    
+    /* Landing Page Colors */
+    --landing-bg-1: #1e3c72;
+    --landing-bg-2: #2a5298;
+
+    /* Glassmorphism Variables */
     --glass-bg: rgba(255, 255, 255, 0.2);
     --glass-border: rgba(255, 255, 255, 0.3);
     --sidebar-width: 260px;
 }
 
 * {
-    box-sizing: border-box; /* Quan trọng: Giúp padding không làm vỡ khung */
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-    margin: 0;
     color: var(--text-color);
     min-height: 100vh;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); 
+}
+
+/* Scrollbar chung */
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
 }
 
 /* =========================================
-   2. AUTHENTICATION (LOGIN / REGISTER)
+   2. UTILITY CLASSES
    ========================================= */
-.auth-body {
+.hidden {
+    display: none !important;
+}
+
+/* Alert Boxes (Thông báo lỗi/thành công) */
+.alert {
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 14px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    min-height: 100vh; /* Sửa: Căn giữa theo chiều dọc */
-    width: 100%;
-    padding: 20px;
+    gap: 10px;
+    animation: fadeIn 0.5s ease;
 }
 
-.login-card {
-    background: var(--glass-bg);
-    backdrop-filter: blur(10px);
-    border-radius: 15px;
-    padding: 40px;
-    border: 1px solid var(--glass-border);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    width: 100%;
-    max-width: 400px;
+.alert-success {
+    background: rgba(74, 222, 128, 0.2);
+    border: 1px solid rgba(74, 222, 128, 0.4);
+    color: var(--success-color);
 }
 
-.login-header h2 {
-    margin: 0 0 10px;
-    color: white;
-    text-transform: uppercase;
-    letter-spacing: 2px;
+.alert-error {
+    background: rgba(255, 77, 77, 0.2);
+    border: 1px solid rgba(255, 77, 77, 0.4);
+    color: var(--error-color);
 }
 
-.login-header p {
-    color: rgba(255, 255, 255, 0.8);
-    margin-bottom: 30px;
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-/* Floating Labels (Nhãn bay) */
+/* =========================================
+   3. FORMS & INPUTS (Login/Register/Modal)
+   ========================================= */
 .form-group {
     margin-bottom: 25px;
     position: relative;
@@ -73,7 +96,7 @@ body {
 
 .input-wrapper input {
     width: 100%;
-    padding: 10px 0;
+    padding: 10px 35px 10px 35px; /* Padding trái phải để chừa chỗ cho Icon */
     background: none;
     border: none;
     outline: none;
@@ -81,23 +104,55 @@ body {
     font-size: 16px;
 }
 
+/* Label (Nhãn) */
 .input-wrapper label {
     position: absolute;
     top: 10px;
-    left: 0;
+    left: 35px; /* Dịch sang phải để không đè lên icon */
     color: rgba(255, 255, 255, 0.7);
     transition: 0.3s ease all;
     pointer-events: none;
 }
 
-/* Logic nhãn bay: Khi Focus HOẶC khi có dữ liệu (dùng required + :valid) */
+/* Hiệu ứng Floating Label (Bay lên) */
 .input-wrapper input:focus ~ label,
-.input-wrapper input:valid ~ label {
+.input-wrapper input:valid ~ label,
+.input-wrapper input.has-value ~ label {
     top: -15px;
+    left: 0; /* Khi bay lên thì về sát lề trái */
     font-size: 12px;
     color: white;
 }
 
+/* Icon bên trái Input */
+.input-icon {
+    position: absolute;
+    left: 0;
+    top: 13px;
+    color: rgba(255, 255, 255, 0.6);
+    transition: 0.3s;
+    font-size: 14px;
+}
+
+.input-wrapper input:focus ~ .input-icon {
+    color: white;
+}
+
+/* Nút ẩn/hiện mật khẩu (Mắt) */
+.toggle-password {
+    position: absolute;
+    right: 5px;
+    top: 13px;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.toggle-password:hover {
+    color: white;
+}
+
+/* Focus Border Effect */
 .focus-border {
     position: absolute;
     bottom: -2px;
@@ -112,30 +167,17 @@ body {
     width: 100%;
 }
 
-.login-btn {
-    width: 100%;
-    padding: 12px;
-    border: none;
-    border-radius: 25px;
-    background: white;
-    color: var(--primary-color);
-    font-weight: bold;
-    font-size: 16px;
-    cursor: pointer;
-    transition: 0.3s;
-    margin-top: 10px;
-}
-
-.login-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-    background: #f0f0f0;
-}
-
+/* Custom Checkbox & Links */
 .form-options, .signup-link {
     margin-top: 20px;
     font-size: 14px;
-    color: white;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.form-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .form-options a, .signup-link a {
@@ -144,13 +186,84 @@ body {
     font-weight: 500;
 }
 
+.remember-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+.remember-wrapper input { accent-color: var(--primary-color); cursor: pointer; }
+
+/* Buttons */
+.btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 25px;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.3s;
+    margin-top: 10px;
+}
+
+.login-btn {
+    background: white;
+    color: var(--primary-color);
+}
+
+.login-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    background: #f0f0f0;
+}
+
 /* =========================================
-   3. DASHBOARD LAYOUT
+   4. AUTHENTICATION PAGES (Container)
+   ========================================= */
+.auth-body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    width: 100%;
+    padding: 20px;
+}
+
+.login-container {
+    width: 100%;
+    max-width: 400px;
+}
+
+.login-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    border-radius: 15px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    text-align: center;
+}
+
+.login-header h2 {
+    margin-bottom: 5px;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.login-header p {
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 25px;
+}
+
+/* =========================================
+   5. DASHBOARD LAYOUT
    ========================================= */
 .dashboard-body {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    height: 100vh; /* Cố định chiều cao màn hình */
-    overflow: hidden; /* Ẩn thanh cuộn body để cuộn bên trong */
+    height: 100vh;
+    overflow: hidden;
 }
 
 .dashboard-wrapper {
@@ -210,7 +323,7 @@ body {
 .logout-link {
     background: none;
     border: none;
-    color: #ff4d4d;
+    color: var(--error-color);
     font-size: 14px;
     cursor: pointer;
     text-align: left;
@@ -225,31 +338,15 @@ body {
     color: #ff8080;
 }
 
-/* Main Content Area (Bổ sung phần còn thiếu) */
+/* Main Content */
 .main-content {
     flex-grow: 1;
     height: 100%;
-    overflow-y: auto; /* Cuộn dọc nội dung */
-    padding-right: 5px; /* Tránh nội dung sát thanh cuộn */
+    overflow-y: auto;
+    padding-right: 5px;
 }
 
-/* Custom Scrollbar */
-.main-content::-webkit-scrollbar {
-    width: 6px;
-}
-
-.main-content::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 10px;
-}
-
-.main-content::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-/* =========================================
-   4. DASHBOARD COMPONENTS
-   ========================================= */
+/* Top Bar */
 .top-bar {
     display: flex;
     justify-content: space-between;
@@ -269,10 +366,8 @@ body {
 }
 
 .search-box input {
-    background: none;
-    border: none;
-    color: white;
-    outline: none;
+    /* Override input style của Auth cho Search box */
+    padding: 5px;
     width: 100%;
 }
 
@@ -281,8 +376,7 @@ body {
 }
 
 .btn-create {
-    background: var(--primary-color);
-    background: linear-gradient(to right, #4facfe 0%, #00f2fe 100%);
+    background: linear-gradient(to right, var(--primary-color) 0%, var(--secondary-color) 100%);
     color: white;
     border: none;
     padding: 10px 25px;
@@ -345,59 +439,255 @@ body {
     color: #555;
     line-height: 1.5;
     display: -webkit-box;
-    -webkit-line-clamp: 4; /* Giới hạn 4 dòng */
+    -webkit-line-clamp: 4;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
 
 /* =========================================
-   5. RESPONSIVE (MOBILE)
+   6. MODAL SYSTEM
+   ========================================= */
+.modal {
+    display: none; 
+    position: fixed; 
+    z-index: 1000; 
+    left: 0;
+    top: 0;
+    width: 100%; 
+    height: 100%; 
+}
+
+.modal-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background: white;
+    margin: 5% auto;
+    width: 90%;
+    max-width: 600px;
+    border-radius: 15px;
+    box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+    position: relative;
+    animation: zoomIn 0.3s ease;
+    overflow: hidden;
+}
+
+.modal-header {
+    padding: 20px;
+    background: var(--primary-color);
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.close-btn {
+    font-size: 28px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.modal-body { padding: 20px; }
+
+/* Override input trong modal vì nền trắng */
+.modal-body .form-group input, 
+.modal-body .form-group textarea, 
+.modal-body .form-group select {
+    color: #333;
+    border: 1px solid #ddd;
+    padding: 10px;
+    width: 100%;
+}
+
+.modal-body .form-group label {
+    position: static;
+    color: #555;
+    font-weight: 600;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.form-row { display: flex; gap: 15px; }
+.half { flex: 1; }
+
+.friend-list-box {
+    max-height: 150px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.modal-footer {
+    padding: 15px 20px;
+    background: #f1f1f1;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.btn-submit {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-cancel {
+    background: #ccc;
+    color: #333;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+@keyframes zoomIn {
+    from {transform: scale(0.8); opacity: 0;}
+    to {transform: scale(1); opacity: 1;}
+}
+
+/* =========================================
+   7. LANDING PAGE
+   ========================================= */
+.landing-body {
+    background: linear-gradient(135deg, var(--landing-bg-1) 0%, var(--landing-bg-2) 100%);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.welcome-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 25px;
+    padding: 50px 40px;
+    text-align: center;
+    width: 100%;
+    max-width: 450px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.welcome-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -50%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent);
+    transform: skewX(-25deg);
+    animation: shine 6s infinite;
+}
+
+@keyframes shine {
+    0% { left: -100%; }
+    20% { left: 100%; }
+    100% { left: 100%; }
+}
+
+.icon-box {
+    font-size: 60px;
+    margin-bottom: 20px;
+    color: var(--primary-color);
+    text-shadow: 0 0 20px rgba(79, 172, 254, 0.6);
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+}
+
+.welcome-card h3 {
+    font-size: 32px;
+    margin: 0 0 10px;
+    font-weight: 700;
+    color: white;
+    letter-spacing: 1px;
+}
+
+.btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.welcome-card .btn {
+    display: block;
+    text-decoration: none;
+    margin: 0; /* Override margin top */
+}
+
+.btn-register {
+    background: transparent;
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+}
+
+.btn-register:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: white;
+    transform: translateY(-3px);
+}
+
+.animate-up {
+    animation: fadeInUp 0.8s ease forwards;
+    opacity: 0;
+    transform: translateY(30px);
+}
+
+@keyframes fadeInUp {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* =========================================
+   8. RESPONSIVE
    ========================================= */
 @media (max-width: 768px) {
+    .dashboard-wrapper {
+        flex-direction: column;
+        padding: 10px;
+    }
     .dashboard-body {
         height: auto;
         overflow: auto;
     }
-
-    .dashboard-wrapper {
-        flex-direction: column;
-        height: auto;
-        padding: 10px;
-    }
-
     .sidebar {
         width: 100%;
         min-width: auto;
         height: auto;
         margin-bottom: 20px;
     }
-    
     .menu {
-        flex-direction: row; /* Chuyển menu thành hàng ngang trên mobile */
+        flex-direction: row;
         overflow-x: auto;
         padding-bottom: 10px;
     }
-    
-    .menu-item {
-        white-space: nowrap;
-    }
-
+    .menu-item { white-space: nowrap; }
     .main-content {
         padding: 0;
         height: auto;
         overflow: visible;
     }
-
     .top-bar {
         flex-direction: column;
         gap: 15px;
     }
-
-    .search-box {
-        width: 100%;
-    }
-    
-    .btn-create {
-        width: 100%;
-    }
+    .search-box, .btn-create { width: 100%; }
 }

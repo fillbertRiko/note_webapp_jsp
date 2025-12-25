@@ -1,25 +1,35 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ page import="model.User" %>
 <!DOCTYPE html>
-<html lang="vi">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Note Basement</title>
+    <title>Welcome to Note Basement</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <link rel="stylesheet" href="${pageContext.request.contextPath}/style/style.css">
-    <script src="${pageContext.request.contextPath}/script/script.jsp"></script>
+    <script type="text/javascript" src="${pageContext.request.contextPath}/script/script.js"></script>
 </head>
-<body>
-    <div class="dashboard-container">
-
-        <main class="content">
-            <div class="welcome-card">
-                <h3>Chúc bạn một ngày tốt lành!</h3>
-                <p>Đây là căn hầm bí mật cho những ghi chú của bạn.</p>
-                <a href="${pageContext.request.contextPath}/auth/login.jsp" class="login">Sign in</a>
-                <a href="${pageContext.request.contextPath}/auth/register.jsp" class="register">Sign Up</a>
+<body class="landing-body">
+    <div class="landing-container">
+        <div class="welcome-card animate-up">
+            <div class="icon-box">
+                <i class="fa-solid fa-vault"></i>
             </div>
-        </main>
+            
+            <h3>Note Basement</h3>
+            <p>Chào mừng đến với căn hầm bí mật.<br>Nơi an toàn nhất cho những ghi chú của bạn.</p>
+            
+            <div class="btn-group">
+                <a href="${pageContext.request.contextPath}/auth/login.jsp" class="btn btn-login">
+                    Đăng nhập
+                </a>
+                <a href="${pageContext.request.contextPath}/auth/register.jsp" class="btn btn-register">
+                    Đăng ký ngay
+                </a>
+            </div>
+        </div>
     </div>
 </body>
 </html>
