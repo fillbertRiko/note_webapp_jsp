@@ -54,9 +54,9 @@ function handleSearch(){
 
 function loadPostViaAjax() {
     const userId = (typeof serverOwnerId !== 'undefined') ? serverOwnerId : '';
-    const url = `${contextPath}/dashboard-note?action=get-posts-html&_id=${userId}`;
 	const searchInput = document.getElementById('searchInput');
 	const keyword = searchInput ? searchInput.value.trim() : "";
+    const url = `${contextPath}/dashboard-note?action=get-posts-html&_id=${userId}&search=${encodeURIComponent(keyword)}`;
     fetch(url)
         .then(response => {
             if (response.status === 401) {
@@ -129,6 +129,37 @@ function openEditModal(btn) {
     toggleModal('editNoteModal', true);
 }
 
+function switchSection(sectionName, clickedLink) {
+    document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+    if(clickedLink) clickedLink.classList.add('active');
+    const topBar = document.querySelector('.top-bar');
+    if(topBar) {
+        topBar.style.display = (sectionName === 'wall') ? 'flex' : 'none';
+    }
+
+    const userId = (typeof serverOwnerId !== 'undefined') ? serverOwnerId : '';
+
+    const url = `${contextPath}/dashboard-note?action=load-section&section=${sectionName}&_id=${userId}`;
+    
+    const container = document.getElementById('dynamic-content');
+    container.innerHTML = '<div style="text-align:center; padding:20px; color:#666;"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>';
+    
+    fetch(url)
+        .then(response => {
+            if(response.status === 401){
+                window.location.href = `${contextPath}/login`;
+                throw new Error("Session expired");
+            }
+            return response.text();
+        })
+        .then(htmlFragment => {
+            container.innerHTML = htmlFragment;
+        })
+        .catch(error => {
+            console.error(error);
+            container.innerHTML = '<p style="color:red; text-align:center;">Lỗi tải dữ liệu.</p>';
+        });
+}
 
 /*action*/
 document.addEventListener("DOMContentLoaded", function () {
