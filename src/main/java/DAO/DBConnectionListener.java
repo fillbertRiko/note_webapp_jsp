@@ -6,7 +6,7 @@ import javax.servlet.annotation.WebListener;
 
 @WebListener
 public class DBConnectionListener implements ServletContextListener {
-	
+
 	public void contextInit(ServletContextEvent sce) {
 		System.out.println("Starting DB Connection init...");
 		try {
@@ -16,7 +16,7 @@ public class DBConnectionListener implements ServletContextListener {
 			System.err.println("FATAL ERROR: Couldn't connect to MongoDB");
 		}
 	}
-	
+
 	@Override
 	public void contextDestroyed(ServletContextEvent sce) {
 		DBConnection.closeConnection();

@@ -17,51 +17,47 @@ import com.mongodb.client.result.UpdateResult;
 import model.FriendInvites;
 
 ///Lop DAO giup giao tiep voi tang du lieu
-///khai bao 1 lan 
+///khai bao 1 lan
 ///co ham chuyen doi tu Document sang POJO phu hop voi MongoDB
 ///tai day se goi cac cau lenh truy van trong db
 ///tao cac cau truy van CRUD cho Friendship
 /// check relationship bang ID
 public class FriendInviteDAO {
-	
+
 	private final MongoCollection<Document> friendInvites;
-	
+
 	public FriendInviteDAO() {
 		MongoDatabase db = DBConnection.getDatabase();
 		this.friendInvites = db.getCollection("friendInvites");
 	}
-	
+
 	private FriendInvites documentToFriendInvite(Document doc) {
-		if(doc == null) {
+		if (doc == null) {
 			return null;
 		}
-		
-		FriendInvites friendInvite = new FriendInvites(
-				doc.getObjectId("_id").toHexString(),
-				doc.getString("senderId"),
-				doc.getString("receiverId"),
-				doc.getString("status"),
-				doc.getDate("createdAt"));
+
+		FriendInvites friendInvite = new FriendInvites(doc.getObjectId("_id").toHexString(), doc.getString("senderId"),
+				doc.getString("receiverId"), doc.getString("status"), doc.getDate("createdAt"));
 		return friendInvite;
 	}
 
-	public FriendInvites findInvitesById(String id){
+	public FriendInvites findInvitesById(String id) {
 		Document query = new Document("_id", new ObjectId(id));
 		Document friendInviteDoc = friendInvites.find(query).first();
-		
-		if(friendInviteDoc == null) {
+
+		if (friendInviteDoc == null) {
 			return null;
 		}
-		
+
 		return documentToFriendInvite(friendInviteDoc);
 	}
-	
+
 	public List<FriendInvites> checkStatus(String status) {
 		List<FriendInvites> friendInviteStatus = new ArrayList<>();
 		Bson filter = Filters.eq("status", status);
-		
-		try(MongoCursor<Document> cursor = friendInvites.find(filter).iterator()){
-			while(cursor.hasNext()) {
+
+		try (MongoCursor<Document> cursor = friendInvites.find(filter).iterator()) {
+			while (cursor.hasNext()) {
 				Document friendInviteDoc = cursor.next();
 				friendInviteStatus.add(documentToFriendInvite(friendInviteDoc));
 			}
@@ -69,38 +65,36 @@ public class FriendInviteDAO {
 			System.err.println("Error, can't find status");
 			e.printStackTrace();
 		}
-		
+
 		return friendInviteStatus;
 	}
-	
 
-	public List<FriendInvites> readAllInvites(){
+	public List<FriendInvites> readAllInvites() {
 		List<FriendInvites> friendInvitesList = new ArrayList<>();
 		try (MongoCursor<Document> cursor = friendInvites.find().iterator()) {
-			while(cursor.hasNext()) {
+			while (cursor.hasNext()) {
 				Document friendInviteDoc = cursor.next();
 				friendInvitesList.add(documentToFriendInvite(friendInviteDoc));
 			}
-		} catch(Exception e) {
+		} catch (Exception e) {
 			e.printStackTrace();
-		} 
+		}
 		return friendInvitesList;
 	}
 
-	public boolean updateInvite(FriendInvites friendInvite){
-		if(friendInvite.getId() == null) {
+	public boolean updateInvite(FriendInvites friendInvite) {
+		if (friendInvite.getId() == null) {
 			System.err.println("Error: Cannot update Invitation, lost ID.");
 			return false;
 		}
-		
+
 		try {
 			Document filter = new Document("_id", new ObjectId(friendInvite.getId()));
-			Document updateFields = new Document("$set", new Document()
-					.append("senderId", friendInvite.getSenderId())
-					.append("receiverId", friendInvite.getReceiverId())
-					.append("status", friendInvite.getStatus())
-					.append("sentAt", friendInvite.getTimeSent()));
-			
+			Document updateFields = new Document("$set",
+					new Document().append("senderId", friendInvite.getSenderId())
+							.append("receiverId", friendInvite.getReceiverId())
+							.append("status", friendInvite.getStatus()).append("sentAt", friendInvite.getTimeSent()));
+
 			UpdateResult result = friendInvites.updateOne(filter, updateFields);
 			return result.getModifiedCount() > 0;
 		} catch (Exception e) {
@@ -111,12 +105,10 @@ public class FriendInviteDAO {
 	}
 
 	public void createInvitation(FriendInvites friendInvite) {
-		Document friendInviteDoc = new Document("_id", new ObjectId())
-				.append("senderId", friendInvite.getSenderId())
-				.append("receiverId", friendInvite.getReceiverId())
-				.append("status", friendInvite.getStatus())
+		Document friendInviteDoc = new Document("_id", new ObjectId()).append("senderId", friendInvite.getSenderId())
+				.append("receiverId", friendInvite.getReceiverId()).append("status", friendInvite.getStatus())
 				.append("sentAt", friendInvite.getTimeSent());
-	
+
 		try {
 			friendInvites.insertOne(friendInviteDoc);
 			System.out.println("Invitation created with ID: " + friendInviteDoc.getObjectId("_id"));
@@ -125,8 +117,8 @@ public class FriendInviteDAO {
 		}
 	}
 
-	public boolean deleteInvitation(String id){
-		try{
+	public boolean deleteInvitation(String id) {
+		try {
 			Document filter = new Document("_id", new ObjectId(id));
 			DeleteResult result = friendInvites.deleteOne(filter);
 			return result.getDeletedCount() == 1;
@@ -139,20 +131,18 @@ public class FriendInviteDAO {
 			return false;
 		}
 	}
-	
+
 	public boolean deleteFriendInviteByUserId(String userId) {
 		try {
 			ObjectId userObjectId = new ObjectId(userId);
-			Bson filter = Filters.or(
-					Filters.eq("senderId", userObjectId),
-					Filters.eq("receiverId", userObjectId));
+			Bson filter = Filters.or(Filters.eq("senderId", userObjectId), Filters.eq("receiverId", userObjectId));
 			DeleteResult result = friendInvites.deleteMany(filter);
-			
-			//debug
+
+			// debug
 			System.out.println(result.toString());
-			
+
 			return true;
-		}catch (IllegalArgumentException e) {
+		} catch (IllegalArgumentException e) {
 			System.err.println("Error: ID user not accepted: " + userId);
 			return false;
 		} catch (Exception e) {
@@ -161,18 +151,18 @@ public class FriendInviteDAO {
 			return false;
 		}
 	}
-	
+
 	public FriendInvites findInvitationBySenderId(String senderId) {
 		Document query = new Document("senderId", senderId);
 		Document friendInviteDoc = friendInvites.find(query).first();
-		
+
 		return documentToFriendInvite(friendInviteDoc);
 	}
-	
+
 	public FriendInvites findInvitationByStatus(String status) {
 		Document query = new Document("status", status);
 		Document friendInviteDoc = friendInvites.find(query).first();
-		
+
 		return documentToFriendInvite(friendInviteDoc);
 	}
 }
