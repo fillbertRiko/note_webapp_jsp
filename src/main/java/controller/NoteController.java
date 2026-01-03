@@ -14,6 +14,7 @@ import javax.servlet.http.HttpSession;
 
 import model.Post;
 import model.User;
+import serviceDB.FriendInviteService;
 import serviceDB.FriendService;
 import serviceDB.PostService;
 import serviceDB.UserService;
@@ -27,6 +28,7 @@ public class NoteController extends HttpServlet {
 	private PostService postService = new PostService();
 	private FriendService friendService = new FriendService();
 	private UserService userService = new UserService();
+	private FriendInviteService inviteService = new FriendInviteService();
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
@@ -70,7 +72,15 @@ public class NoteController extends HttpServlet {
 
 		String section = req.getParameter("section");
 		if ("friend".equals(section)) {
-			req.setAttribute("friendList", friendService.getFriendOfUser(ownerId));
+			if(ownerId.equals(currentUser.getId())) {
+				req.setAttribute("friendList", friendService.getFriendOfUser(ownerId));
+				req.setAttribute("receiverlist", inviteService.getReceiverInvites(ownerId));
+				req.setAttribute("sentList", inviteService.getSentInvites(ownerId));
+				req.setAttribute("isOwner", true);
+			} else {
+				req.setAttribute("friendList", friendService.getFriendOfUser(ownerId));
+				req.setAttribute("isOwner", false);
+			}
 			req.getRequestDispatcher("/note/friend-fragment.jsp").forward(req, res);
 		} else if ("info".equals(section)) {
 			User wallOwner = userService.showInformation(ownerId);
@@ -160,7 +170,37 @@ public class NoteController extends HttpServlet {
 			updatePost(req, res);
 		} else if("update-profile".equals(action)) {
 			updateProfile(req,res);
+		} else if("send-invite".equals(action)) {
+			handleSendInvite(req, res);
+		} else if("accept-invite".equals(action)) {
+			handleAcceptInvite(req, res);
+		} else if("cancel-invite".equals(action)) {
+			handleCancelInvite(req, res);
 		}
+	}
+
+	private void handleCancelInvite(HttpServletRequest req, HttpServletResponse res) throws IOException {
+		// TODO Auto-generated method stub
+		String inviteId = req.getParameter("inviteId");
+		inviteService.deleteInvite(inviteId);
+		res.sendRedirect(req.getContextPath() + "/dashboard-note?action=view-wall&section=friend");
+	}
+
+	private void handleAcceptInvite(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+		// TODO Auto-generated method stub
+		String inviteId = req.getParameter("inviteId");
+		inviteService.acceptInvite(inviteId);
+		res.sendRedirect(req.getContextPath() + "/dashboard-note?action=view-wall&section=friend");
+	}
+
+	private void handleSendInvite(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+		// TODO Auto-generated method stub
+		User currentUser = (User) req.getSession().getAttribute("currentUser");
+		String receiverId = req.getParameter("receiverId");
+		
+		inviteService.sendInvite(currentUser.getId(), receiverId);
+		res.sendRedirect(req.getContextPath() + "/dashboard-note?action=view-wall&id=" + receiverId);
+		
 	}
 
 	private void updateProfile(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {

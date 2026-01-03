@@ -791,3 +791,95 @@ body {
 .btn-edit-profile:hover {
     background: #0056b3;
 }
+
+/* --- STYLE CHO MỤC BẠN BÈ (FRIEND GRID) --- */
+
+.friend-wrapper {
+    max-width: 1000px;
+    margin: 0 auto;
+    animation: fadeIn 0.3s ease;
+}
+
+.section-header {
+    margin-bottom: 20px;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+}
+
+.friend-grid {
+    display: grid;
+    /* Tự động chia cột: Tối thiểu 220px một thẻ */
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); 
+    gap: 20px;
+}
+
+.friend-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid #f0f0f0;
+}
+
+.friend-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+}
+
+.friend-avatar {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 15px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid #eef2f7;
+}
+
+.friend-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.friend-name {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    margin: 0 0 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* Cắt tên nếu quá dài */
+}
+
+.friend-email {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 15px;
+}
+
+.btn-visit {
+    display: inline-block;
+    padding: 8px 20px;
+    background-color: #f0f2f5;
+    color: #333;
+    text-decoration: none;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn-visit:hover {
+    background-color: #007bff;
+    color: white;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    background: white;
+    border-radius: 10px;
+    border: 1px dashed #ccc;
+}
