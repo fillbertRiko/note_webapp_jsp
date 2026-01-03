@@ -1,10 +1,14 @@
 package DAO;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.result.DeleteResult;
@@ -32,8 +36,8 @@ public class FriendshipDAO {
 			return null;
 		}
 
-		Friendship friendship = new Friendship(doc.getObjectId("_id").toHexString(), doc.getString("userId"),
-				doc.getString("friendId"), doc.getDate("createdAt"));
+		Friendship friendship = new Friendship(doc.getObjectId("_id").toHexString(), doc.getString("userId1"),
+				doc.getString("userId2"), doc.getDate("createdAt"));
 		return friendship;
 	}
 
@@ -44,7 +48,40 @@ public class FriendshipDAO {
 				Filters.and(Filters.eq("userId1", userId2), Filters.eq("userId2", userId1)));
 		return friendships.countDocuments(filter) > 0;
 	}
+	
+	public Friendship findRelationshipByUserId(String userId) {
+		Document query = new Document("userId", userId);
+		Document friendshipDoc = friendships.find(query).first();
 
+		return documentToFriendship(friendshipDoc);
+	}
+	
+	public List<String> getListFriendIds(String userId){
+		List<String> friendIds = new ArrayList<>();
+		
+		Bson filter = Filters.or(
+				Filters.eq("userId1", userId),
+				Filters.eq("userId2", userId));
+		
+		try (MongoCursor<Document> cursor = friendships.find(filter).iterator()){
+			while(cursor.hasNext()) {
+				Document doc = cursor.next();
+				String uId1 = doc.getString("userId1");
+				String uId2 = doc.getString("userId2");
+				
+				if(uId1.equals(userId)) {
+					friendIds.add(uId2);
+				} else {
+					friendIds.add(uId1);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return friendIds;
+	}
+
+	///Update
 	public boolean updateFriendship(Friendship friendship) {
 		if (friendship.getId() == null) {
 			System.err.println("Error: Cannot update Relationship, lost ID.");
@@ -53,8 +90,8 @@ public class FriendshipDAO {
 
 		try {
 			Document filter = new Document("_id", new ObjectId(friendship.getId()));
-			Document updateFields = new Document("$set", new Document().append("userId", friendship.getUserId())
-					.append("friendId", friendship.getFriendId()).append("createdAt", friendship.getTimeCreate()));
+			Document updateFields = new Document("$set", new Document().append("userId1", friendship.getUserId1())
+					.append("userId2", friendship.getUserId2()).append("createdAt", friendship.getTimeCreate()));
 
 			UpdateResult result = friendships.updateOne(filter, updateFields);
 			return result.getModifiedCount() > 0;
@@ -65,9 +102,10 @@ public class FriendshipDAO {
 		}
 	}
 
+	///Create
 	public void createRelationship(Friendship friendship) {
-		Document friendshipDoc = new Document("_id", new ObjectId()).append("userId", friendship.getUserId())
-				.append("friendId", friendship.getFriendId()).append("created_at", friendship.getTimeCreate());
+		Document friendshipDoc = new Document("_id", new ObjectId()).append("userId1", friendship.getUserId1())
+				.append("userId2", friendship.getUserId2()).append("createdAt", friendship.getTimeCreate());
 
 		try {
 			friendships.insertOne(friendshipDoc);
@@ -77,16 +115,17 @@ public class FriendshipDAO {
 		}
 	}
 
-	public boolean deleteRelationship(String id) {
+	///Delete
+	public boolean deleteRelationship(String userId) {
 		try {
-			Document filter = new Document("_id", new ObjectId(id));
-			DeleteResult result = friendships.deleteOne(filter);
+			Bson filter = Filters.or(
+					Filters.eq("userId1", userId),
+					Filters.eq("userId2", userId));
+			DeleteResult result = friendships.deleteMany(filter);
+			System.out.println("Delete count: " + result.getDeletedCount());
 			return result.getDeletedCount() == 1;
-		} catch (IllegalArgumentException e) {
-			System.err.println("Error: Friend ID unexcepted" + id);
-			return false;
 		} catch (Exception e) {
-			System.err.println("Error when delete relationship by ID: " + id);
+			System.err.println("Error when delete relationship by ID: " + userId);
 			e.printStackTrace();
 			return false;
 		}
@@ -94,14 +133,13 @@ public class FriendshipDAO {
 
 	public boolean deleteRelationshipByUserId(String userId) {
 		try {
-			ObjectId userObjectId = new ObjectId(userId);
-
-			Bson filter = Filters.or(Filters.eq("userId1", userObjectId), Filters.eq("userId2", userObjectId));
+			Bson filter = Filters.or(
+					Filters.eq("userId1", userId), 
+					Filters.eq("userId2", userId));
 
 			DeleteResult result = friendships.deleteMany(filter);
-
 			// debug
-			System.out.println(result.toString());
+			System.out.println("Delete count: " + result.getDeletedCount());
 
 			return true;
 		} catch (IllegalArgumentException e) {
@@ -114,10 +152,5 @@ public class FriendshipDAO {
 		}
 	}
 
-	public Friendship findRelationshipByUserId(String userId) {
-		Document query = new Document("userId", userId);
-		Document friendshipDoc = friendships.find(query).first();
-
-		return documentToFriendship(friendshipDoc);
-	}
+	
 }

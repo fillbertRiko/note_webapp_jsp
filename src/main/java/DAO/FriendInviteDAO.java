@@ -36,11 +36,17 @@ public class FriendInviteDAO {
 			return null;
 		}
 
-		FriendInvites friendInvite = new FriendInvites(doc.getObjectId("_id").toHexString(), doc.getString("senderId"),
-				doc.getString("receiverId"), doc.getString("status"), doc.getDate("createdAt"));
+		FriendInvites friendInvite = new FriendInvites(
+				doc.getObjectId("_id").toHexString(), 
+				doc.getString("senderId"),
+				doc.getString("receiverId"), 
+				doc.getString("status"), 
+				doc.getDate("createdAt"));
 		return friendInvite;
 	}
 
+	///CRUD
+	///Read
 	public FriendInvites findInvitesById(String id) {
 		Document query = new Document("_id", new ObjectId(id));
 		Document friendInviteDoc = friendInvites.find(query).first();
@@ -81,7 +87,35 @@ public class FriendInviteDAO {
 		}
 		return friendInvitesList;
 	}
+	
+	public List<FriendInvites> findInvitationBySenderId(String senderId) {
+		List<FriendInvites> list = new ArrayList<>();
+		Document query = new Document("senderId", senderId);
+		try(MongoCursor<Document> cursor = friendInvites.find(query).iterator()){
+			while(cursor.hasNext()) {
+				list.add(documentToFriendInvite(cursor.next()));
+			}
+		}
 
+		return list;
+	}
+
+	public List<FriendInvites> findInvitationForUser(String receiverId) {
+		List<FriendInvites> list = new ArrayList<>();
+		Bson filter = Filters.and(
+				Filters.eq("receiverId", receiverId),
+				Filters.eq("status", "PENDING"));
+		
+		try(MongoCursor<Document> cursor = friendInvites.find(filter).iterator()){
+			while(cursor.hasNext()) {
+				list.add(documentToFriendInvite(cursor.next()));
+			}
+		}
+		
+		return list;
+	}
+
+	///Update
 	public boolean updateInvite(FriendInvites friendInvite) {
 		if (friendInvite.getId() == null) {
 			System.err.println("Error: Cannot update Invitation, lost ID.");
@@ -91,9 +125,11 @@ public class FriendInviteDAO {
 		try {
 			Document filter = new Document("_id", new ObjectId(friendInvite.getId()));
 			Document updateFields = new Document("$set",
-					new Document().append("senderId", friendInvite.getSenderId())
+					new Document()
+							.append("senderId", friendInvite.getSenderId())
 							.append("receiverId", friendInvite.getReceiverId())
-							.append("status", friendInvite.getStatus()).append("sentAt", friendInvite.getTimeSent()));
+							.append("status", friendInvite.getStatus())
+							.append("createdAt", friendInvite.getTimeSent()));
 
 			UpdateResult result = friendInvites.updateOne(filter, updateFields);
 			return result.getModifiedCount() > 0;
@@ -104,10 +140,13 @@ public class FriendInviteDAO {
 		}
 	}
 
+	///Create
 	public void createInvitation(FriendInvites friendInvite) {
-		Document friendInviteDoc = new Document("_id", new ObjectId()).append("senderId", friendInvite.getSenderId())
-				.append("receiverId", friendInvite.getReceiverId()).append("status", friendInvite.getStatus())
-				.append("sentAt", friendInvite.getTimeSent());
+		Document friendInviteDoc = new Document("_id", new ObjectId())
+											.append("senderId", friendInvite.getSenderId())
+											.append("receiverId", friendInvite.getReceiverId())
+											.append("status", friendInvite.getStatus())
+											.append("createdAt", friendInvite.getTimeSent());
 
 		try {
 			friendInvites.insertOne(friendInviteDoc);
@@ -117,6 +156,7 @@ public class FriendInviteDAO {
 		}
 	}
 
+	///Delete
 	public boolean deleteInvitation(String id) {
 		try {
 			Document filter = new Document("_id", new ObjectId(id));
@@ -134,8 +174,7 @@ public class FriendInviteDAO {
 
 	public boolean deleteFriendInviteByUserId(String userId) {
 		try {
-			ObjectId userObjectId = new ObjectId(userId);
-			Bson filter = Filters.or(Filters.eq("senderId", userObjectId), Filters.eq("receiverId", userObjectId));
+			Bson filter = Filters.or(Filters.eq("senderId", userId), Filters.eq("receiverId", userId));
 			DeleteResult result = friendInvites.deleteMany(filter);
 
 			// debug
@@ -150,19 +189,5 @@ public class FriendInviteDAO {
 			e.printStackTrace();
 			return false;
 		}
-	}
-
-	public FriendInvites findInvitationBySenderId(String senderId) {
-		Document query = new Document("senderId", senderId);
-		Document friendInviteDoc = friendInvites.find(query).first();
-
-		return documentToFriendInvite(friendInviteDoc);
-	}
-
-	public FriendInvites findInvitationByStatus(String status) {
-		Document query = new Document("status", status);
-		Document friendInviteDoc = friendInvites.find(query).first();
-
-		return documentToFriendInvite(friendInviteDoc);
 	}
 }
