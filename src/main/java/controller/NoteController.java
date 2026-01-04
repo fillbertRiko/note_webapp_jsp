@@ -22,7 +22,7 @@ import serviceDB.UserService;
 @WebServlet("/dashboard-note")
 public class NoteController extends HttpServlet {
 	/**
-	 *
+	 *	
 	 */
 	private static final long serialVersionUID = 1L;
 	private PostService postService = new PostService();
@@ -49,10 +49,18 @@ public class NoteController extends HttpServlet {
 		case "load-section":
 			loadSectionFragment(req, res);
 			break;
+		case "search-user":
+			searchUserHtml(req, res);
+			break;
 		default:
 			showWall(req, res);
 			break;
 		}
+	}
+
+	private void searchUserHtml(HttpServletRequest req, HttpServletResponse res) {
+		// TODO Auto-generated method stub
+		
 	}
 
 	private void loadSectionFragment(HttpServletRequest req, HttpServletResponse res)
@@ -60,17 +68,18 @@ public class NoteController extends HttpServlet {
 		// TODO Auto-generated method stub
 		HttpSession session = req.getSession(false);
 		User currentUser = (User) session.getAttribute("currentUser");
+		String section = req.getParameter("section");
+		String ownerId = req.getParameter("_id");
 		if (currentUser == null) {
+			res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 			res.sendRedirect(req.getContextPath() + "/login");
 			return;
 		}
 
-		String ownerId = req.getParameter("_id");
 		if (ownerId == null || ownerId.isEmpty()) {
 			ownerId = currentUser.getId();
 		}
 
-		String section = req.getParameter("section");
 		if ("friend".equals(section)) {
 			if(ownerId.equals(currentUser.getId())) {
 				req.setAttribute("friendList", friendService.getFriendOfUser(ownerId));
@@ -89,7 +98,19 @@ public class NoteController extends HttpServlet {
 			req.getRequestDispatcher("/note/info-fragment.jsp").forward(req, res);
 		} else {
 			List<Post> listPosts = postService.getPostByVisitor(ownerId, currentUser.getId(), 1, "");
+			User wallOwner = userService.showInformation(ownerId);
 			req.setAttribute("listPosts", listPosts);
+			req.setAttribute("wallOwner", wallOwner);
+			req.setAttribute("isMyWall", ownerId.equals(currentUser.getId()));
+			
+			String relationship = "STRANGER";
+			if(!ownerId.equals(currentUser.getId())) {
+				relationship = friendService.checkRelationship(currentUser.getId(), relationship);
+			} else {
+				relationship = "SELF";
+			}
+			
+			req.setAttribute("relationship", relationship);
 			req.getRequestDispatcher("/note/wall-fragment.jsp").forward(req, res);
 		}
 	}
@@ -98,16 +119,17 @@ public class NoteController extends HttpServlet {
 		// TODO Auto-generated method stub
 		HttpSession session = req.getSession(false);
 		User currentUser = (User) session.getAttribute("currentUser");
+		String ownerId = req.getParameter("_id");
+		String keyword = req.getParameter("search");
+		///debug
 		System.out.println(currentUser);
 		if (currentUser == null) {
 			return;
 		}
-		String ownerId = req.getParameter("_id");
 		if (ownerId == null) {
 			ownerId = currentUser.getId();
 		}
 
-		String keyword = req.getParameter("search");
 		if (keyword == null) {
 			keyword = "";
 		}
@@ -119,43 +141,50 @@ public class NoteController extends HttpServlet {
 	}
 
 	private void showWall(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
-		HttpSession session = req.getSession();
-		User currentUser = (User) session.getAttribute("currentUser");
-		String keyword = req.getParameter("search");
-		if (keyword == null) {
-			keyword = "";
-		}
+        HttpSession session = req.getSession();
+        User currentUser = (User) session.getAttribute("currentUser");
+        String keyword = req.getParameter("search");
+        String ownerId = req.getParameter("_id");
+        String relationship = "SELF";
+        int page = 1;
+        User wallOwner = userService.showInformation(ownerId);
+        
+        if (currentUser == null) {
+            res.sendRedirect(req.getContextPath() + "/login");            
+            return;
+        }
 
-		if (currentUser == null) {
-			res.sendRedirect(req.getContextPath() + "/login");
-			return;
-		}
+        if (keyword == null) keyword = "";
 
-		String ownerId = req.getParameter("_id");
-		if (ownerId == null || ownerId.isEmpty()) {
-			ownerId = currentUser.getId();
-		}
+        if (ownerId == null || ownerId.isEmpty()) {
+            ownerId = currentUser.getId();
+        }
+        
+        if (!ownerId.equals(currentUser.getId())) {
+            relationship = friendService.checkRelationship(currentUser.getId(), ownerId);
+        }
+        req.setAttribute("relationship", relationship);
 
-		int page = 1;
-		try {
-			String pageStr = req.getParameter("page");
-			if (pageStr != null) {
-				page = Integer.parseInt(pageStr);
-			}
-		} catch (NumberFormatException e) {
-			page = 1;
-		}
+        try {
+            String pageStr = req.getParameter("page");
+            if (pageStr != null) page = Integer.parseInt(pageStr);
+        } catch (NumberFormatException e) {
+            page = 1;
+        }
+        
+        req.setAttribute("wallOwner", wallOwner);
+        req.setAttribute("isMyWall", ownerId.equals(currentUser.getId()));
 
-		List<Post> listPosts = postService.getPostByVisitor(ownerId, currentUser.getId(), page, keyword);
-		List<?> friendList = friendService.getFriendOfUser(ownerId);
+        List<Post> listPosts = postService.getPostByVisitor(ownerId, currentUser.getId(), page, keyword);
+        List<?> friendList = friendService.getFriendOfUser(ownerId);
 
-		req.setAttribute("friendList", friendList);
-		req.setAttribute("listPosts", listPosts);
-		req.setAttribute("ownerId", ownerId);
-		req.setAttribute("currentPage", page);
+        req.setAttribute("friendList", friendList);
+        req.setAttribute("listPosts", listPosts);
+        req.setAttribute("ownerId", ownerId);
+        req.setAttribute("currentPage", page);
 
-		req.getRequestDispatcher("/note/dashboard.jsp").forward(req, res);
-	}
+        req.getRequestDispatcher("/note/dashboard.jsp").forward(req, res);
+    }
 
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
@@ -176,7 +205,19 @@ public class NoteController extends HttpServlet {
 			handleAcceptInvite(req, res);
 		} else if("cancel-invite".equals(action)) {
 			handleCancelInvite(req, res);
+		} else if("cancel-invite-by-user".equals(action)) {
+			handleCancelInviteByUser(req, res);
 		}
+	}
+
+	private void handleCancelInviteByUser(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+		// TODO Auto-generated method stub
+		User currentUser = (User) req.getSession().getAttribute("currentUser");
+		String receiverId = req.getParameter("receiverId");
+		
+		//bo sung ben Service/DAO
+		
+		res.sendRedirect(req.getContextPath() + "/dashboard-note?action=view-wall&_id=" + receiverId);
 	}
 
 	private void handleCancelInvite(HttpServletRequest req, HttpServletResponse res) throws IOException {
@@ -199,7 +240,7 @@ public class NoteController extends HttpServlet {
 		String receiverId = req.getParameter("receiverId");
 		
 		inviteService.sendInvite(currentUser.getId(), receiverId);
-		res.sendRedirect(req.getContextPath() + "/dashboard-note?action=view-wall&id=" + receiverId);
+		res.sendRedirect(req.getContextPath() + "/dashboard-note?action=view-wall&_id=" + receiverId);
 		
 	}
 
@@ -207,16 +248,17 @@ public class NoteController extends HttpServlet {
 		// TODO Auto-generated method stub
 		HttpSession session = req.getSession();
 		User currentUser = (User) session.getAttribute("currentUser");
+		String fullname = req.getParameter("fullname");
+		String newPassword = req.getParameter("newPassword");
+		
 		if(currentUser == null) {
 			res.sendRedirect(req.getContextPath() + "/login");
 			return;
 		}
 		
-		String fullname = req.getParameter("fullname");
-		String newPassword = req.getParameter("newPassword");
-		
 		currentUser.setFullname(fullname);
 		session.setAttribute("currentUser", currentUser);
+		
 		if(newPassword != null && !newPassword.trim().isEmpty()) {
 			currentUser.setPassword(newPassword);
 		} else {
@@ -233,21 +275,20 @@ public class NoteController extends HttpServlet {
 
 	private void createPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
 		req.setCharacterEncoding("UTF-8");
-
 		HttpSession session = req.getSession();
 		User currentUser = (User) session.getAttribute("currentUser");
-		if (currentUser == null) {
-			res.sendRedirect(req.getContextPath() + "/login");
-			return;
-		}
-
 		String title = req.getParameter("title");
 		String content = req.getParameter("content");
 		String topicId = req.getParameter("topicId");
 		String accessLevelId = req.getParameter("accessLevelId");
 		String allowCommentStatus = req.getParameter("allowComment");
-
 		String[] viewerArray = req.getParameterValues("allowViewer");
+		
+		if (currentUser == null) {
+			res.sendRedirect(req.getContextPath() + "/login");
+			return;
+		}
+
 		List<String> allowViewerId = new ArrayList<>();
 
 		if (viewerArray != null) {
@@ -258,7 +299,7 @@ public class NoteController extends HttpServlet {
 				allowCommentStatus);
 
 		if (isCreated) {
-			res.sendRedirect(req.getContextPath() + "/dashboard-note?action=view-wall&id=" + currentUser.getId());
+			res.sendRedirect(req.getContextPath() + "/dashboard-note?action=view-wall&_id=" + currentUser.getId());
 		} else {
 			res.sendRedirect(req.getContextPath() + "error");
 		}
@@ -288,19 +329,20 @@ public class NoteController extends HttpServlet {
 		req.setCharacterEncoding("UTF-8");
 		HttpSession session = req.getSession();
 		User currentUser = (User) session.getAttribute("currentUser");
-		if (currentUser == null) {
-			res.sendRedirect(req.getContextPath() + "/login");
-			return;
-		}
-
 		String postId = req.getParameter("_id");
 		String title = req.getParameter("title");
 		String content = req.getParameter("content");
 		String topicId = req.getParameter("topicId");
 		String accessLevelId = req.getParameter("accessLevelId");
 		String allowCommentStatus = req.getParameter("allowComment");
-
+		
 		String[] viewerArray = req.getParameterValues("allowViewer");
+		
+		if (currentUser == null) {
+			res.sendRedirect(req.getContextPath() + "/login");
+			return;
+		}
+
 		List<String> allowViewerId = new ArrayList<>();
 		if (viewerArray != null) {
 			allowViewerId = Arrays.asList(viewerArray);
@@ -317,7 +359,7 @@ public class NoteController extends HttpServlet {
 		System.out.println(isEdit);
 
 		if (isEdit) {
-			res.sendRedirect(req.getContextPath() + "/dashboard-note?action=view-wall&id=" + currentUser.getId());
+			res.sendRedirect(req.getContextPath() + "/dashboard-note?action=view-wall&_id=" + currentUser.getId());
 		} else {
 			res.sendRedirect(req.getContextPath() + "error");
 		}
