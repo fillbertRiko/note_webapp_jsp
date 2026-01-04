@@ -9,6 +9,48 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+<c:if test="${not empty currentUser}">
+    
+    <div class="profile-actions" style="margin-top: 15px;">
+        
+        <c:if test="${relationship == 'SELF'}">
+            </c:if>
+
+        <c:if test="${relationship == 'FRIEND'}">
+             <button class="btn-friend-status" style="background: #28a745; cursor: default;">
+                <i class="fa-solid fa-check"></i> Bạn bè
+            </button>
+            </c:if>
+
+        <c:if test="${relationship == 'SENT_REQUEST'}">
+            <button class="btn-friend-status" style="background: #6c757d; cursor: default;">
+                <i class="fa-regular fa-clock"></i> Đã gửi lời mời
+            </button>
+            <form action="${pageContext.request.contextPath}/dashboard-note" method="POST" style="display:inline;">
+                <input type="hidden" name="action" value="cancel-invite-by-user"> 
+                <input type="hidden" name="receiverId" value="${wallOwner.id}">
+                <button type="submit" style="background:none; border:none; color: #dc3545; cursor:pointer; text-decoration:underline; font-size:12px;">Hủy</button>
+            </form>
+        </c:if>
+
+        <c:if test="${relationship == 'RECEIVED_REQUEST'}">
+             <span style="color: #007bff; font-size: 14px;">Người này muốn kết bạn với bạn!</span>
+             <a href="${pageContext.request.contextPath}/dashboard-note?action=load-section&section=friend" class="btn-visit">Xem lời mời</a>
+        </c:if>
+
+        <c:if test="${relationship == 'STRANGER'}">
+            <form action="${pageContext.request.contextPath}/dashboard-note" method="POST">
+                <input type="hidden" name="action" value="send-invite">
+                <input type="hidden" name="receiverId" value="${wallOwner.id}">
+                
+                <button type="submit" class="btn-create" style="padding: 8px 20px;">
+                    <i class="fa-solid fa-user-plus"></i> Thêm bạn bè
+                </button>
+            </form>
+        </c:if>
+
+    </div>
+</c:if>
 	<c:if test="${not empty wallOwner}">
                 <div class="wall-info" style="margin: 20px 0; padding: 20px; background: white; border-radius: 10px; display: flex; align-items: center; gap: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
                     <div class="wall-avatar" style="width: 60px; height: 60px; border-radius: 50%; overflow: hidden;">
