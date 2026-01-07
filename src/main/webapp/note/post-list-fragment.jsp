@@ -21,8 +21,7 @@
             </span>
         </div>
 
-        <h3 class="note-title">${post.title}</h3>
-        
+        <h3 class="note-title"><c:out value="${post.title}" /></h3>
         <p class="note-excerpt"><c:out value="${post.content}" /></p>
 
         <div class="note-footer">
@@ -30,22 +29,10 @@
             
             <div class="note-actions">
                 <c:if test="${post.userId == currentUser.id}">
-                	<c:set var="viewerListStr" value="" />
-    				<c:forEach var="vId" items="${post.allowViewer}">
-        			<c:set var="viewerListStr" value="${viewerListStr},${vId}" />
-    				</c:forEach>
+                
                     <button type="button" title="Sửa" 
                             class="btn-edit"
-                            data-id="${post.id}"
-                            data-title="${post.title}"
-                            data-content="${post.content}"
-                            data-topic="${post.topicId}"
-                            data-access="${post.accessLevelId}"
-                            data-comment="${post.numberAllowComment}"
-                            onclick="openEditModal(this)">
-                            
-                            <div class="hidden-data title" style="display:none;"><c:out value="${post.title}"/></div>
-            				<div class="hidden-data content" style="display:none;"><c:out value="${post.content}"/></div>
+                            onclick="openEditModal('${post.id}', '${post.title}', '${post.content}', '${post.topicId}', '${post.accessLevelId}', '${post.numberAllowComment}')">
                         <i class="fa-solid fa-pen"></i>
                     </button>
 
@@ -56,6 +43,7 @@
                             <i class="fa-solid fa-trash"></i>
                         </button>
                     </form>
+                    
                 </c:if>
             </div>
         </div>
