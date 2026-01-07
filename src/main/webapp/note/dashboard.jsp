@@ -1,6 +1,18 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+
+<%
+    // --- [ĐOẠN MỚI THÊM VÀO] ---
+    // Kiểm tra xem trang này có được gọi từ Controller hay không
+    // Nếu biến "wallOwner" bị null (nghĩa là chưa qua Controller xử lý) -> Chuyển hướng ngay về Controller
+    if (request.getAttribute("wallOwner") == null) {
+        response.sendRedirect(request.getContextPath() + "/dashboard-note");
+        return;
+    }
+    // ----------------------------
+%>
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -20,15 +32,19 @@
             </div>
             
             <nav class="menu">
-			    <a href="#" onclick="switchSection('wall', this); return false;" class="menu-item active">
+                <a href="#" onclick="switchSection('wall', this); return false;" class="menu-item active">
 			        <i class="fa-solid fa-note-sticky"></i> Note
 			    </a>
 			    
-			    <a href="#" onclick="switchSection('friend', this); return false;" class="menu-item">
+                <a href="#" onclick="switchSection('friend', this); return false;" class="menu-item">
 			        <i class="fa-solid fa-user-group"></i> List friends
 			    </a>
+
+                <a href="${pageContext.request.contextPath}/schedule?action=view" class="menu-item">
+                    <i class="fa-solid fa-calendar-days"></i> Schedule
+                </a>
 			    
-			    <a href="#" onclick="switchSection('info', this); return false;" class="menu-item">
+                <a href="#" onclick="switchSection('info', this); return false;" class="menu-item">
 			        <i class="fa-solid fa-circle-info"></i> Information
 			    </a>
 			</nav>
@@ -54,7 +70,7 @@
                     <i class="fa-solid fa-magnifying-glass"></i>
                     <input type="text" 
                            id="searchInput" 
-                           placeholder="Search notes..." 
+                           placeholder="Search notes or friends..." 
                            oninput="handleSearch()">
                 </div>
                 

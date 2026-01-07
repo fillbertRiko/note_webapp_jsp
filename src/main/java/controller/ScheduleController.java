@@ -14,66 +14,77 @@ import model.User;
 import model.WorkSchedule;
 import serviceDB.ScheduleService;
 
-///Controller dieu huong cho chuc nang quan ly lich trinh
-///Kiem tra session nguoi dung
-///Nhan request tu JSP va goi Service xu ly tuong ung
+// Định nghĩa URL: Khi truy cập ".../schedule" thì Servlet này sẽ chạy
 @WebServlet("/schedule")
 public class ScheduleController extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private ScheduleService scheduleService;
 
+    // Hàm khởi tạo: Chạy 1 lần duy nhất khi Server bật để chuẩn bị Service
     @Override
     public void init() throws ServletException {
         scheduleService = new ScheduleService();
     }
 
-    ///Xu ly cac request GET (Xem danh sach, Xem form sua)
+    // --- XỬ LÝ GET (Lấy dữ liệu để hiển thị) ---
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
-        req.setCharacterEncoding("UTF-8");
+        req.setCharacterEncoding("UTF-8"); // Hỗ trợ tiếng Việt
+        
+        // 1. Kiểm tra đăng nhập
         HttpSession session = req.getSession(false);
         User currentUser = (session != null) ? (User) session.getAttribute("currentUser") : null;
 
-        ///Kiem tra neu chua dang nhap thi da ve trang login
         if (currentUser == null) {
+            // Chưa đăng nhập -> Đuổi về trang Login
             res.sendRedirect(req.getContextPath() + "/auth/login.jsp");
             return;
         }
 
+        // 2. Xác định hành động (Action)
         String action = req.getParameter("action");
-        if (action == null) action = "view";
+        if (action == null) action = "view"; // Mặc định là xem danh sách
 
         switch (action) {
             case "view":
-                ///Lay danh sach va chuyen ve trang dashboard
+                // --- XEM DANH SÁCH LỊCH ---
+                // Lấy tất cả lịch của user hiện tại từ Database
                 List<WorkSchedule> mySchedules = scheduleService.getSchedulesByUser(currentUser.getId());
+                
+                // Gửi danh sách sang JSP
                 req.setAttribute("scheduleList", mySchedules);
-                req.getRequestDispatcher("/note/workDashboard.jsp").forward(req, res);
+                
+                // Chuyển hướng đến giao diện hiển thị lịch
+                req.getRequestDispatcher("/workSchedule/workDashboard.jsp").forward(req, res); 
                 break;
                 
             case "edit":
-                ///Lay thong tin chi tiet de hien thi len form sua
-                String id = req.getParameter("id");
+                // --- HIỂN THỊ FORM SỬA ---
+                String id = req.getParameter("id"); // Lấy ID lịch cần sửa
                 WorkSchedule schedule = scheduleService.getScheduleById(id);
                 
+                // Kiểm tra bảo mật: Lịch phải tồn tại VÀ phải là của chính mình tạo ra mới được sửa
                 if (schedule != null && schedule.getUserId().equals(currentUser.getId())) {
-                    req.setAttribute("schedule", schedule);
-                    req.getRequestDispatcher("/note/editSchedule.jsp").forward(req, res);
+                    req.setAttribute("schedule", schedule); // Gửi thông tin lịch cũ sang form để điền sẵn
+                    req.getRequestDispatcher("/workSchedule/editSchedule.jsp").forward(req, res); 
                 } else {
+                    // Nếu cố tình sửa lịch người khác -> Đẩy về trang danh sách
                     res.sendRedirect(req.getContextPath() + "/schedule?action=view");
                 }
                 break;
-                
+
             default:
                 res.sendRedirect(req.getContextPath() + "/schedule?action=view");
                 break;
         }
     }
 
-    ///Xu ly cac request POST (Tao moi, Cap nhat, Xoa)
+    // --- XỬ LÝ POST (Nhận dữ liệu từ Form gửi lên) ---
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
+        
+        // 1. Kiểm tra đăng nhập lại (cho chắc chắn)
         HttpSession session = req.getSession(false);
         User currentUser = (session != null) ? (User) session.getAttribute("currentUser") : null;
 
@@ -84,31 +95,39 @@ public class ScheduleController extends HttpServlet {
 
         String action = req.getParameter("action");
         
-        // Lay du lieu tu form
-        String subject = req.getParameter("subject");
-        String description = req.getParameter("description");
-        String startTime = req.getParameter("startTime");
-        String endTime = req.getParameter("endTime");
-        String priority = req.getParameter("priority");
-        String location = req.getParameter("location");
+        // 2. Lấy dữ liệu từ các ô input trong form
+        String subject = req.getParameter("subject");       // Tiêu đề
+        String description = req.getParameter("description"); // Mô tả
+        String startTime = req.getParameter("startTime");   // Giờ bắt đầu
+        String endTime = req.getParameter("endTime");       // Giờ kết thúc
+        String priority = req.getParameter("priority");     // Độ ưu tiên
+        String location = req.getParameter("location");     // Địa điểm
 
+        // 3. Phân loại xử lý
         if ("create".equals(action)) {
+            // --- TẠO MỚI ---
             boolean success = scheduleService.create(currentUser.getId(), subject, description, startTime, endTime, priority, location);
             if (success) {
+                // Thành công: Quay lại trang danh sách kèm thông báo
                 res.sendRedirect(req.getContextPath() + "/schedule?action=view&msg=create_success");
             } else {
+                // Thất bại: Quay lại kèm báo lỗi
                 res.sendRedirect(req.getContextPath() + "/schedule?action=view&error=create_failed");
             }
             
         } else if ("update".equals(action)) {
-            String id = req.getParameter("id");
+            // --- CẬP NHẬT ---
+            String id = req.getParameter("id"); // Lấy ID cần sửa
+            // Gọi service để update vào DB
             scheduleService.update(id, subject, description, startTime, endTime, priority, location);
             res.sendRedirect(req.getContextPath() + "/schedule?action=view");
-            
+
         } else if ("delete".equals(action)) {
+            // --- XÓA ---
             String id = req.getParameter("id");
-            // Kiem tra quyen so huu truoc khi xoa
             WorkSchedule s = scheduleService.getScheduleById(id);
+            
+            // Bảo mật: Kiểm tra xem lịch này có đúng là của mình không rồi mới xóa
             if (s != null && s.getUserId().equals(currentUser.getId())) {
                 scheduleService.delete(id);
             }

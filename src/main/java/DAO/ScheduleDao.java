@@ -4,160 +4,147 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 
 import model.WorkSchedule;
 
-///Lop DAO giup giao tiep voi tang du lieu
-///khai bao 1 lan
-///co ham chuyen doi tu Document sang POJO phu hop voi MongoDB
-///tai day se goi cac cau lenh truy van trong db
-///tao cac cau truy van CRUD cho Schedule
-///check user account bang username
+// Lớp này chịu trách nhiệm thao tác trực tiếp với bảng "workSchedule" trong MongoDB
 public class ScheduleDao {
 
-	private final MongoCollection<Document> schedules;
+    private final MongoCollection<Document> schedules;
 
-	public ScheduleDao() {
-		MongoDatabase db = DBConnection.getDatabase();
-		this.schedules = db.getCollection("wokSchedule");
-	}
+    public ScheduleDao() {
+        // Kết nối Database và lấy bảng (collection) workSchedule
+        MongoDatabase db = DBConnection.getDatabase();
+        this.schedules = db.getCollection("workSchedule");
+    }
 
-	private WorkSchedule documentToSchedule(Document doc) {
-		if (doc == null) {
-			return null;
-		}
+    // Hàm phụ trợ: Chuyển đổi dữ liệu từ MongoDB (Document) sang Object Java (WorkSchedule)
+    private WorkSchedule documentToSchedule(Document doc) {
+        if (doc == null) return null;
+        
+        return new WorkSchedule(
+            doc.getObjectId("_id").toHexString(), // Chuyển ObjectId sang String
+            doc.getString("userId"),
+            doc.getString("subject"), 
+            doc.getString("description"), 
+            doc.getDate("startTime"),
+            doc.getDate("endTime"), 
+            doc.getString("prioroty"),
+            doc.getString("location"), 
+            doc.getDate("createdAt")
+        );
+    }
 
-		WorkSchedule schedule = new WorkSchedule(doc.getObjectId("_id").toHexString(), doc.getString("userId"),
-				doc.getString("subject"), doc.getString("description"), doc.getDate("startTime"),
-				doc.getDate("endTime"), doc.getString("prioroty"), doc.getString("location"), doc.getDate("createdAt"));
-		return schedule;
-	}
+    // Tìm kiếm lịch trình theo ID (Dùng khi bấm nút Sửa để load dữ liệu cũ)
+    public WorkSchedule findScheduleById(String id) {
+        try {
+            // Tạo bộ lọc theo _id
+            Document query = new Document("_id", new ObjectId(id));
+            // Lấy kết quả đầu tiên tìm thấy
+            Document scheduleDoc = schedules.find(query).first();
+            return documentToSchedule(scheduleDoc);
+        } catch (Exception e) {
+            return null;
+        }
+    }
 
-	public WorkSchedule findScheduleById(String id) {
-		Document query = new Document("_id", new ObjectId(id));
-		Document scheduleDoc = schedules.find(query).first();
+    // Lấy toàn bộ danh sách lịch trình
+    public List<WorkSchedule> readAllSchedules() {
+        List<WorkSchedule> schedulesList = new ArrayList<>();
+        try (MongoCursor<Document> cursor = schedules.find().iterator()) {
+            while (cursor.hasNext()) {
+                Document scheduleDoc = cursor.next();
+                // Chuyển đổi từng dòng dữ liệu và thêm vào danh sách
+                WorkSchedule s = documentToSchedule(scheduleDoc);
+                if(s != null) schedulesList.add(s);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return schedulesList;
+    }
 
-		if (scheduleDoc == null) {
-			return null;
-		}
+    // Cập nhật thông tin lịch trình
+    public boolean updateSchedule(WorkSchedule schedule) {
+        if (schedule.getId() == null) return false;
 
-		return documentToSchedule(scheduleDoc);
-	}
+        try {
+            // 1. Tìm bản ghi cần sửa bằng ID
+            Document filter = new Document("_id", new ObjectId(schedule.getId()));
+            
+            // 2. Định nghĩa các trường cần thay đổi bằng toán tử "$set"
+            Document updateFields = new Document("$set",
+                    new Document()
+                            .append("subject", schedule.getSubject())
+                            .append("description", schedule.getDescription())
+                            .append("startTime", schedule.getStartTime())
+                            .append("endTime", schedule.getEndTime())
+                            .append("prioroty", schedule.getPriority())
+                            .append("location", schedule.getLocation()));
+            
+            // 3. Thực hiện update
+            UpdateResult result = schedules.updateOne(filter, updateFields);
+            return result.getModifiedCount() > 0; // Trả về true nếu có dòng dữ liệu bị thay đổi
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 
-	public WorkSchedule findScheduleByUserId(String userId) {
-		Document query = new Document("userId", new ObjectId(userId));
-		Document scheduleDoc = schedules.find(query).first();
+    // Thêm mới lịch trình
+    public void createSchedule(WorkSchedule schedule) {
+        // Tạo đối tượng Document chứa dữ liệu để insert
+        // Lưu ý: Không dùng "$set" ở đây vì đây là lệnh INSERT, không phải UPDATE
+        Document scheduleDoc = new Document()
+                .append("userId", schedule.getUserId())
+                .append("subject", schedule.getSubject())
+                .append("description", schedule.getDescription())
+                .append("startTime", schedule.getStartTime())
+                .append("endTime", schedule.getEndTime())
+                .append("prioroty", schedule.getPriority())
+                .append("location", schedule.getLocation())
+                .append("createdAt", schedule.getCreatedAt());
 
-		if (scheduleDoc == null) {
-			return null;
-		}
+        try {
+            // Chèn vào Database
+            schedules.insertOne(scheduleDoc);
+            System.out.println("Schedule created: " + schedule.getSubject());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-		return documentToSchedule(scheduleDoc);
-	}
+    // Xóa một lịch trình cụ thể theo ID
+    public boolean deleteSchedule(String id) {
+        try {
+            Document filter = new Document("_id", new ObjectId(id));
+            DeleteResult result = schedules.deleteOne(filter);
+            return result.getDeletedCount() == 1; // Trả về true nếu xóa thành công
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 
-	public WorkSchedule findScheduleByLocation(String location) {
-		Document query = new Document("location", new ObjectId(location));
-		Document scheduleDoc = schedules.find(query).first();
-
-		if (scheduleDoc == null) {
-			return null;
-		}
-
-		return documentToSchedule(scheduleDoc);
-	}
-
-	public List<WorkSchedule> readAllSchedules() {
-		List<WorkSchedule> schedulesList = new ArrayList<>();
-		try (MongoCursor<Document> cursor = schedules.find().iterator()) {
-			while (cursor.hasNext()) {
-				Document scheduleDoc = cursor.next();
-				schedulesList.add(documentToSchedule(scheduleDoc));
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return schedulesList;
-	}
-
-	public boolean updateSchedule(WorkSchedule schedule) {
-		if (schedule.getId() == null) {
-			System.err.println("Error: Cannot update Schedule, lost ID.");
-			return false;
-		}
-
-		try {
-			Document filter = new Document("_id", new ObjectId(schedule.getId()));
-			Document updateFields = new Document("$set",
-					new Document().append("subject", schedule.getSubject())
-							.append("description", schedule.getDescription())
-							.append("startTime", schedule.getStartTime()).append("endTime", schedule.getEndTime())
-							.append("prioroty", schedule.getPriority()).append("location", schedule.getLocation()));
-
-			UpdateResult result = schedules.updateOne(filter, updateFields);
-			return result.getModifiedCount() > 0;
-		} catch (Exception e) {
-			System.err.println("Error when update user have ID: " + schedule.getId());
-			e.printStackTrace();
-			return false;
-		}
-	}
-
-	public void createSchedule(WorkSchedule schedule) {
-		Document scheduleDoc = new Document("$set",
-				new Document().append("userId", schedule.getUserId()).append("subject", schedule.getSubject())
-						.append("description", schedule.getDescription()).append("startTime", schedule.getStartTime())
-						.append("endTime", schedule.getEndTime()).append("prioroty", schedule.getPriority())
-						.append("location", schedule.getLocation()).append("createdAt", schedule.getCreatedAt()));
-
-		try {
-			schedules.insertOne(scheduleDoc);
-			System.out.println("User created with ID: " + scheduleDoc.getObjectId("_id"));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	public boolean deleteSchedule(String id) {
-		try {
-			Document filter = new Document("_id", new ObjectId(id));
-			DeleteResult result = schedules.deleteOne(filter);
-			return result.getDeletedCount() == 1;
-		} catch (IllegalArgumentException e) {
-			System.err.println("Error: ID user unexcepted" + id);
-			return false;
-		} catch (Exception e) {
-			System.err.println("Error when delete User by ID: " + id);
-			e.printStackTrace();
-			return false;
-		}
-	}
-
-	public boolean deleteSchedulesByUserId(String userId) {
-		try {
-			Document filter = new Document("userId", new ObjectId(userId));
-			DeleteResult result = schedules.deleteMany(filter);
-			return result.getDeletedCount() > 0;
-		} catch (IllegalArgumentException e) {
-			System.err.println("Error: ID user not found" + userId);
-			return false;
-		} catch (Exception e) {
-			System.err.println("Error when delete Post by UserID: " + userId);
-			e.printStackTrace();
-			return false;
-		}
-	}
-
-	public WorkSchedule findUserBySubject(String subject) {
-		Document query = new Document("subject", subject);
-		Document scheduleDoc = schedules.find(query).first();
-
-		return documentToSchedule(scheduleDoc);
-	}
+    // Xóa tất cả lịch trình của một người dùng (Dùng khi xóa tài khoản User)
+    public boolean deleteSchedulesByUserId(String userId) {
+        try {
+            // Tìm và xóa tất cả bản ghi có userId tương ứng
+            Document filter = new Document("userId", userId);
+            DeleteResult result = schedules.deleteMany(filter);
+            return result.getDeletedCount() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }
