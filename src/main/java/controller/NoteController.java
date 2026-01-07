@@ -18,41 +18,40 @@ import serviceDB.FriendService;
 import serviceDB.PostService;
 import serviceDB.UserService;
 
-// Định nghĩa URL mapping: Mọi request gửi đến "/dashboard-note" sẽ vào Servlet này xử lý
+// Định nghĩa đường dẫn: Mọi yêu cầu đến "/dashboard-note" sẽ do Servlet này xử lý
 @WebServlet("/dashboard-note")
 public class NoteController extends HttpServlet {
     private static final long serialVersionUID = 1L;
     
-    // Khai báo các Service để làm việc với Database (Logic nghiệp vụ)
-    private PostService postService = new PostService();          // Xử lý bài viết (Thêm/Sửa/Xóa)
-    private FriendService friendService = new FriendService();    // Xử lý quan hệ bạn bè
-    private UserService userService = new UserService();          // Xử lý thông tin User
-    private FriendInviteService inviteService = new FriendInviteService(); // Xử lý lời mời kết bạn
+    // Khai báo các Service để xử lý nghiệp vụ với Database
+    private PostService postService = new PostService();          // Quản lý bài viết
+    private FriendService friendService = new FriendService();    // Quản lý bạn bè
+    private UserService userService = new UserService();          // Quản lý thông tin user
+    private FriendInviteService inviteService = new FriendInviteService(); // Quản lý lời mời kết bạn
 
     // --- PHẦN 1: XỬ LÝ GET REQUEST (Lấy dữ liệu hiển thị) ---
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8"); // Đảm bảo không lỗi font tiếng Việt
         
-        // Lấy tham số "action" từ URL để biết người dùng muốn làm gì
+        // Lấy tham số "action" để biết người dùng muốn xem gì (Tường nhà, tìm kiếm, hay chuyển tab...)
         String action = req.getParameter("action");
         if (action == null) {
-            action = "view-wall"; // Mặc định là xem tường nhà (Dashboard)
+            action = "view-wall"; // Mặc định là xem tường nhà
         }
 
-        // Điều hướng request dựa trên hành động
         switch (action) {
         case "view-wall":
-            showWall(req, res); // Hiển thị toàn bộ trang Dashboard chính
+            showWall(req, res); // Hiển thị trang Dashboard đầy đủ
             break;
         case "get-posts-html":
-            loadPostJson(req, res); // Tải danh sách bài viết (dùng cho cuộn trang/load thêm)
+            loadPostJson(req, res); // Tải thêm bài viết (dùng cho tính năng cuộn trang)
             break;
         case "load-section":
-            loadSectionFragment(req, res); // Chuyển đổi giữa các tab (Note/Friend/Info) bằng AJAX
+            loadSectionFragment(req, res); // Chuyển đổi giữa các tab Note/Friend/Info (AJAX)
             break;
         case "search-user":
-            searchUserHtml(req, res); // Xử lý tìm kiếm người dùng (AJAX)
+            searchUserHtml(req, res); // Tìm kiếm người dùng
             break;
         default:
             showWall(req, res);
@@ -63,55 +62,49 @@ public class NoteController extends HttpServlet {
     // --- CHỨC NĂNG TÌM KIẾM NGƯỜI DÙNG ---
     private void searchUserHtml(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
         HttpSession session = req.getSession(false);
-        User currentUser = (User) session.getAttribute("currentUser"); // Lấy người đang đăng nhập
-        if (currentUser == null) return; // Bảo mật: Chưa đăng nhập thì không cho tìm
+        User currentUser = (User) session.getAttribute("currentUser");
+        if (currentUser == null) return; // Chưa đăng nhập thì không tìm được
 
-        String keyword = req.getParameter("search"); // Lấy từ khóa người dùng gõ
-        
-        // 1. Gọi Service tìm trong Database những ai có tên hoặc email trùng khớp
+        String keyword = req.getParameter("search");
+        // 1. Tìm user trong DB theo tên hoặc email
         List<User> results = userService.searchUsers(keyword);
         
-        // 2. Logic phức tạp: Kiểm tra mối quan hệ giữa "Mình" và "Họ" để hiển thị nút bấm đúng
-        // Ví dụ: User A tìm thấy User B -> Nút là "Thêm bạn", "Hủy kết bạn" hay "Đồng ý"?
+        // 2. Xác định mối quan hệ với từng người tìm được (Để hiển thị nút Kết bạn, Hủy kết bạn, hay Chấp nhận)
         java.util.Map<String, String> relationshipMap = new java.util.HashMap<>();
         for (User u : results) {
-            // checkRelationship trả về: FRIEND, STRANGER, SENT_REQUEST, v.v.
             String rel = friendService.checkRelationship(currentUser.getId(), u.getId());
             relationshipMap.put(u.getId(), rel);
         }
 
-        // 3. Gửi dữ liệu sang file JSP nhỏ (fragment) để render kết quả
+        // 3. Gửi dữ liệu sang file JSP kết quả
         req.setAttribute("userList", results);
         req.setAttribute("relationshipMap", relationshipMap);
-        
         req.getRequestDispatcher("/note/user-search-result.jsp").forward(req, res);
     }
 
     // --- CHỨC NĂNG CHUYỂN TAB (AJAX) ---
-    // Hàm này giúp bấm menu Note/Friend/Info mà không cần load lại cả trang
     private void loadSectionFragment(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
         HttpSession session = req.getSession(false);
         User currentUser = (User) session.getAttribute("currentUser");
         String section = req.getParameter("section"); // Tab muốn xem (friend, info, wall)
-        String ownerId = req.getParameter("_id");     // ID của chủ nhà đang xem
+        String ownerId = req.getParameter("_id");     // ID của người mình đang xem tường
         
         if (currentUser == null) {
             res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
 
-        // Nếu không có _id, mặc định là xem nhà của chính mình
         if (ownerId == null || ownerId.isEmpty()) {
-            ownerId = currentUser.getId();
+            ownerId = currentUser.getId(); // Mặc định xem tường nhà mình
         }
 
-        // --- Xử lý Tab Bạn Bè ---
+        // Xử lý Tab Bạn Bè
         if ("friend".equals(section)) {
             if(ownerId.equals(currentUser.getId())) {
-                // Nếu là nhà mình: Xem được cả lời mời kết bạn (Đến và Đi)
+                // Nếu là nhà mình: Xem được danh sách bạn, lời mời đến, lời mời đi
                 req.setAttribute("friendList", friendService.getFriendOfUser(ownerId));
-                req.setAttribute("receivedList", inviteService.getReceiverInvites(ownerId)); // Ai mời mình?
-                req.setAttribute("sentList", inviteService.getSentInvites(ownerId));         // Mình mời ai?
+                req.setAttribute("receivedList", inviteService.getReceiverInvites(ownerId));
+                req.setAttribute("sentList", inviteService.getSentInvites(ownerId));
                 req.setAttribute("isOwner", true);
             } else {
                 // Nếu xem nhà người khác: Chỉ thấy danh sách bạn của họ
@@ -120,24 +113,23 @@ public class NoteController extends HttpServlet {
             }
             req.getRequestDispatcher("/note/friend-fragment.jsp").forward(req, res);
             
-        // --- Xử lý Tab Thông tin ---
+        // Xử lý Tab Thông tin cá nhân
         } else if ("info".equals(section)) {
             User wallOwner = userService.showInformation(ownerId);
             req.setAttribute("wallOwner", wallOwner);
             req.setAttribute("isMyWall", ownerId.equals(currentUser.getId()));
             req.getRequestDispatcher("/note/info-fragment.jsp").forward(req, res);
             
-        // --- Xử lý Tab Ghi chú (Mặc định) ---
+        // Xử lý Tab Bài viết (Wall)
         } else {
-            // Lấy danh sách bài viết (có kiểm tra quyền riêng tư: Bạn bè mới thấy bài Friend Only)
+            // Lấy danh sách bài viết (có kiểm tra quyền riêng tư)
             List<Post> listPosts = postService.getPostByVisitor(ownerId, currentUser.getId(), 1, "");
             User wallOwner = userService.showInformation(ownerId);
-            
             req.setAttribute("listPosts", listPosts);
             req.setAttribute("wallOwner", wallOwner);
             req.setAttribute("isMyWall", ownerId.equals(currentUser.getId()));
             
-            // Xác định mối quan hệ để hiện nút "Kết bạn" trên bìa hồ sơ
+            // Kiểm tra quan hệ để hiện nút trên bìa hồ sơ
             String relationship = "STRANGER";
             if(!ownerId.equals(currentUser.getId())) {
                 relationship = friendService.checkRelationship(currentUser.getId(), ownerId);
@@ -150,7 +142,7 @@ public class NoteController extends HttpServlet {
         }
     }
 
-    // --- HÀM TẢI BÀI VIẾT (Dùng cho load thêm/tìm kiếm bài viết) ---
+    // --- HÀM TẢI BÀI VIẾT (Dùng cho load thêm hoặc search bài) ---
     private void loadPostJson(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
         HttpSession session = req.getSession(false);
         User currentUser = (User) session.getAttribute("currentUser");
@@ -161,7 +153,6 @@ public class NoteController extends HttpServlet {
         if (ownerId == null) ownerId = currentUser.getId();
         if (keyword == null) keyword = "";
 
-        // Lấy bài viết dựa trên ID chủ nhà, ID khách xem, và từ khóa
         List<Post> listPosts = postService.getPostByVisitor(ownerId, currentUser.getId(), 1, keyword);
 
         req.setAttribute("listPosts", listPosts);
@@ -169,32 +160,30 @@ public class NoteController extends HttpServlet {
         req.getRequestDispatcher("/note/post-list-fragment.jsp").forward(req, res);
     }
 
-    // --- HÀM HIỂN THỊ TRANG CHỦ (Full Page) ---
+    // --- HIỂN THỊ TRANG CHỦ FULL (Lần đầu truy cập) ---
     private void showWall(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
         HttpSession session = req.getSession();
         User currentUser = (User) session.getAttribute("currentUser");
         
-        // Chưa đăng nhập -> Đá về trang Login
+        // Kiểm tra đăng nhập
         if (currentUser == null) {
             res.sendRedirect(req.getContextPath() + "/auth/login.jsp");
             return;
         }
 
         String keyword = req.getParameter("search");
-        String ownerId = req.getParameter("_id"); // ID người mà mình đang vào xem tường
+        String ownerId = req.getParameter("_id");
         String relationship = "SELF";
         int page = 1;
         
         if (keyword == null) keyword = "";
-        // Nếu không có _id trên URL, tức là đang xem tường nhà mình
         if (ownerId == null || ownerId.isEmpty()) {
             ownerId = currentUser.getId();
         }
         
-        // Lấy thông tin chủ nhà
         User wallOwner = userService.showInformation(ownerId);
         
-        // Nếu xem tường người khác, kiểm tra quan hệ
+        // Kiểm tra quan hệ nếu đang xem tường người khác
         if (!ownerId.equals(currentUser.getId())) {
             relationship = friendService.checkRelationship(currentUser.getId(), ownerId);
         }
@@ -209,9 +198,9 @@ public class NoteController extends HttpServlet {
             page = 1;
         }
         
-        // Đẩy dữ liệu ra JSP
+        // Đẩy dữ liệu ra JSP chính (dashboard.jsp)
         req.setAttribute("wallOwner", wallOwner);
-        req.setAttribute("isMyWall", ownerId.equals(currentUser.getId())); // Biến boolean để JSP biết ẩn/hiện nút sửa xóa
+        req.setAttribute("isMyWall", ownerId.equals(currentUser.getId()));
         
         List<Post> listPosts = postService.getPostByVisitor(ownerId, currentUser.getId(), page, keyword);
         List<?> friendList = friendService.getFriendOfUser(ownerId);
@@ -221,22 +210,21 @@ public class NoteController extends HttpServlet {
         req.setAttribute("ownerId", ownerId);
         req.setAttribute("currentPage", page);
         
-        // Chuyển hướng về file giao diện chính
         req.getRequestDispatcher("/note/dashboard.jsp").forward(req, res);
     }
 
-    // --- PHẦN 2: XỬ LÝ POST REQUEST (Gửi form dữ liệu) ---
+    // --- PHẦN 2: XỬ LÝ POST REQUEST (Gửi form) ---
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
-        String action = req.getParameter("action"); // Xem form gửi lên là hành động gì
+        String action = req.getParameter("action"); // Kiểm tra hành động
 
         if ("create".equals(action)) {
-            createPost(req, res);       // Tạo bài viết mới
+            createPost(req, res);       // Tạo bài mới
         } else if ("delete".equals(action)) {
-            deletePost(req, res);       // Xóa bài viết
+            deletePost(req, res);       // Xóa bài
         } else if ("edit".equals(action)) {
-            updatePost(req, res);       // Sửa bài viết
+            updatePost(req, res);       // Sửa bài
         } else if("update-profile".equals(action)) {
             updateProfile(req,res);     // Cập nhật thông tin cá nhân
         } else if("send-invite".equals(action)) {
@@ -244,10 +232,10 @@ public class NoteController extends HttpServlet {
         } else if("accept-invite".equals(action)) {
             handleAcceptInvite(req, res); // Đồng ý kết bạn
         } else if("cancel-invite".equals(action)) {
-            handleCancelInvite(req, res); // Hủy lời mời (người nhận hủy)
+            handleCancelInvite(req, res); // Hủy lời mời
         } else if("cancel-invite-by-user".equals(action)) {
-            handleCancelInviteByUser(req, res); // (Chức năng phụ)
-        } else if("unfriend".equals(action)) { 
+            handleCancelInviteByUser(req, res);
+        } else if("unfriend".equals(action)) {
             handleUnfriend(req, res);   // Hủy kết bạn (Unfriend)
         }
     }
@@ -259,9 +247,8 @@ public class NoteController extends HttpServlet {
         String friendId = req.getParameter("friendId");
         
         if(currentUser != null && friendId != null) {
-            friendService.unfriend(currentUser.getId(), friendId); // Gọi service xóa quan hệ
+            friendService.unfriend(currentUser.getId(), friendId);
         }
-        // Sau khi xóa xong, reload lại tab danh sách bạn bè
         res.sendRedirect(req.getContextPath() + "/dashboard-note?action=view-wall&section=friend");
     }
 
@@ -269,31 +256,27 @@ public class NoteController extends HttpServlet {
         res.sendRedirect(req.getContextPath() + "/dashboard-note?action=view-wall");
     }
 
-    // Hủy lời mời kết bạn (Từ phía người nhận hoặc người gửi muốn thu hồi)
     private void handleCancelInvite(HttpServletRequest req, HttpServletResponse res) throws IOException {
         String inviteId = req.getParameter("inviteId");
-        inviteService.deleteInvite(inviteId);
+        inviteService.deleteInvite(inviteId); // Xóa lời mời khỏi DB
         res.sendRedirect(req.getContextPath() + "/dashboard-note?action=view-wall&section=friend");
     }
 
-    // Chấp nhận lời mời kết bạn
     private void handleAcceptInvite(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
         String inviteId = req.getParameter("inviteId");
-        inviteService.acceptInvite(inviteId); // Chuyển trạng thái sang "Bạn bè"
+        inviteService.acceptInvite(inviteId); // Chuyển trạng thái thành bạn bè
         res.sendRedirect(req.getContextPath() + "/dashboard-note?action=view-wall&section=friend");
     }
 
-    // Gửi lời mời kết bạn mới
     private void handleSendInvite(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
         User currentUser = (User) req.getSession().getAttribute("currentUser");
         String receiverId = req.getParameter("receiverId");
         
         inviteService.sendInvite(currentUser.getId(), receiverId);
-        // Load lại tường của người đó để thấy nút chuyển thành "Đã gửi lời mời"
+        // Load lại tường người đó để thấy nút chuyển trạng thái
         res.sendRedirect(req.getContextPath() + "/dashboard-note?action=view-wall&_id=" + receiverId);
     }
 
-    // Cập nhật thông tin cá nhân (Tên, Mật khẩu)
     private void updateProfile(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
         HttpSession session = req.getSession();
         User currentUser = (User) session.getAttribute("currentUser");
@@ -307,16 +290,15 @@ public class NoteController extends HttpServlet {
         
         currentUser.setFullname(fullname);
         
-        // Chỉ đổi mật khẩu nếu người dùng có nhập vào ô password
+        // Chỉ đổi mật khẩu nếu ô nhập không để trống
         if(newPassword != null && !newPassword.trim().isEmpty()) {
             currentUser.setPassword(newPassword); 
         } else {
-            currentUser.setPassword(null); // Null để Service biết là không đổi pass
+            currentUser.setPassword(null);
         }
         
         boolean isUpdated = userService.updateUser(currentUser);
         if (isUpdated) {
-            // Cập nhật lại session với thông tin mới nhất từ DB
             User updatedUser = userService.showInformation(currentUser.getId());
             session.setAttribute("currentUser", updatedUser);
             res.sendRedirect(req.getContextPath() + "/dashboard-note?action=view-wall&section=info");
@@ -324,20 +306,20 @@ public class NoteController extends HttpServlet {
             res.sendRedirect(req.getContextPath() + "/dashboard-note?action=view-wall&section=info&error=update_failed");
         }
     }
-
+    
     // Tạo bài viết mới
     private void createPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
         HttpSession session = req.getSession();
         User currentUser = (User) session.getAttribute("currentUser");
         
-        // Lấy dữ liệu từ Form
+        // Lấy dữ liệu từ form
         String title = req.getParameter("title");
         String content = req.getParameter("content");
         String topicId = req.getParameter("topicId");
-        String accessLevelId = req.getParameter("accessLevelId"); // Public, Private, Friend Only
+        String accessLevelId = req.getParameter("accessLevelId");
         String allowCommentStatus = req.getParameter("allowComment");
-        String[] viewerArray = req.getParameterValues("allowViewer"); // Danh sách bạn bè được xem (nếu chọn chế độ cụ thể)
+        String[] viewerArray = req.getParameterValues("allowViewer");
         
         if (currentUser == null) {
             res.sendRedirect(req.getContextPath() + "/auth/login.jsp");
@@ -351,9 +333,11 @@ public class NoteController extends HttpServlet {
 
         boolean isCreated = postService.create(title, content, topicId, currentUser, accessLevelId, allowViewerId, allowCommentStatus);
         if (isCreated) {
+            // Thành công: Quay về trang chủ của mình
             res.sendRedirect(req.getContextPath() + "/dashboard-note?action=view-wall&_id=" + currentUser.getId());
         } else {
-            res.sendRedirect(req.getContextPath() + "/error");
+            // Thất bại: Quay về Dashboard kèm thông báo lỗi (Thay vì trang /error)
+            res.sendRedirect(req.getContextPath() + "/dashboard-note?action=view-wall&error=create_failed");
         }
     }
 
@@ -368,13 +352,13 @@ public class NoteController extends HttpServlet {
         }
 
         String postId = req.getParameter("_id");
-        // Gọi Service xóa (Service sẽ kiểm tra xem bài đó có đúng là của user này không)
         boolean isDeleted = postService.deleteMyPost(postId, currentUser.getId());
         
         if (isDeleted) {
             res.sendRedirect(req.getContextPath() + "/dashboard-note?action=view-wall&_id=" + currentUser.getId());
         } else {
-            res.sendRedirect(req.getContextPath() + "/error");
+            // Thất bại: Quay về Dashboard báo lỗi
+            res.sendRedirect(req.getContextPath() + "/dashboard-note?action=view-wall&error=delete_failed");
         }
     }
 
@@ -416,7 +400,8 @@ public class NoteController extends HttpServlet {
         if (isEdit) {
             res.sendRedirect(req.getContextPath() + "/dashboard-note?action=view-wall&_id=" + currentUser.getId());
         } else {
-            res.sendRedirect(req.getContextPath() + "/error");
+            // Thất bại: Quay về Dashboard báo lỗi
+            res.sendRedirect(req.getContextPath() + "/dashboard-note?action=view-wall&error=edit_failed");
         }
     }
 }
