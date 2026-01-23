@@ -14,7 +14,6 @@ public class FriendService {
     private UserDao userDao = new UserDao();
     private FriendInviteDAO friendInviteDao = new FriendInviteDAO();
 
-    // Lấy danh sách bạn bè (kèm thông tin user)
     public List<User> getFriendOfUser(String userId) {
         List<User> friends = new ArrayList<>();
         List<String> friendIds = friendshipDao.getListFriendIds(userId);
@@ -22,44 +21,62 @@ public class FriendService {
         for(String id : friendIds) {
             User u = userDao.findUserById(id); 
             if(u != null) {
-                u.setPassword(null); // Bảo mật
+                u.setPassword(null);
                 friends.add(u);
             }
         }
         return friends;
     }
     
-    // --- [MỚI] THỰC HIỆN HỦY KẾT BẠN ---
     public boolean unfriend(String currentUserId, String friendId) {
         return friendshipDao.deleteSpecificFriendship(currentUserId, friendId);
     }
     
-    // --- [QUAN TRỌNG] KIỂM TRA QUAN HỆ ĐỂ HIỂN THỊ UI ---
     public String checkRelationship(String currentUserId, String targetUserId) {
         if(currentUserId.equals(targetUserId)) {
-            return "SELF"; // Chính mình
+            return "SELF";
         }
         
         if(friendshipDao.checkFriendship(currentUserId, targetUserId)) {
-            return "FRIEND"; // Đã là bạn bè
+            return "FRIEND"; 
         }
         
-        // Kiểm tra xem mình có gửi lời mời cho họ không
         List<FriendInvites> sentList = friendInviteDao.findInvitationBySenderId(currentUserId);
         for(FriendInvites inv : sentList) {
             if(inv.getReceiverId().equals(targetUserId) && "PENDING".equals(inv.getStatus())) {
-                return "SENT_REQUEST"; // Đã gửi lời mời
+                return "SENT_REQUEST";
             }
         }
         
-        // Kiểm tra xem họ có gửi lời mời cho mình không
         List<FriendInvites> receiverList = friendInviteDao.findInvitationForUser(currentUserId);
         for(FriendInvites inv : receiverList) {
             if(inv.getSenderId().equals(targetUserId)) {
-                return "RECEIVED_REQUEST"; // Có lời mời đang chờ
+                return "RECEIVED_REQUEST";
             }
         }
         
-        return "STRANGER"; // Người lạ
+        return "STRANGER"; 
+    }
+    
+    public List<User> getSuggestedFriends(String currentUserId) {
+        List<User> potentialUsers = userDao.getPotentialUsers(currentUserId);
+        List<String> currentFriendIds = friendshipDao.getListFriendIds(currentUserId);
+        FriendInviteDAO inviteDAO = new FriendInviteDAO(); 
+        List<FriendInvites> sent = inviteDAO.findInvitationBySenderId(currentUserId);
+        List<FriendInvites> received = inviteDAO.findInvitationForUser(currentUserId);
+        
+        List<String> pendingIds = new ArrayList<>();
+        for(FriendInvites i : sent) pendingIds.add(i.getReceiverId()); 
+        for(FriendInvites i : received) pendingIds.add(i.getSenderId());
+
+        List<User> suggestions = new ArrayList<>();
+        for (User u : potentialUsers) {
+            String uid = u.getId();
+            if (!currentFriendIds.contains(uid) && !pendingIds.contains(uid)) {
+                suggestions.add(u);
+            }
+        }
+        
+        return suggestions;
     }
 }

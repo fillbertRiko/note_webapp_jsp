@@ -45,13 +45,12 @@ public class FriendInviteService {
         return friendInviteDao.deleteInvitation(inviteId);
     }
     
-    // Lấy danh sách lời mời ĐẾN mình (Người khác gửi cho mình)
     public List<FriendInvites> getReceiverInvites(String currentUserId){
         List<FriendInvites> list = new ArrayList<>();
         List<FriendInvites> invites = friendInviteDao.findInvitationForUser(currentUserId);
         
         for(FriendInvites inv : invites) {
-            User sender = userDao.findUserById(inv.getSenderId()); // Sửa: Lấy thông tin người gửi
+            User sender = userDao.findUserById(inv.getSenderId());
             if(sender != null) {
                 sender.setPassword(null);
                 inv.setUserDetails(sender);
@@ -61,22 +60,17 @@ public class FriendInviteService {
         return list;
     }
     
-    // [ĐÃ SỬA LỖI] Lấy danh sách lời mời mình ĐÃ GỬI đi
     public List<FriendInvites> getSentInvites(String currentUserId){
         List<FriendInvites> list = new ArrayList<>();
-        
-        // 1. Sửa lỗi logic: Phải tìm theo SenderId (Người gửi là mình)
+        //need to fix
         List<FriendInvites> sent = friendInviteDao.findInvitationBySenderId(currentUserId);
         
         for(FriendInvites inv : sent) {
             if("PENDING".equals(inv.getStatus())) {
-                // Lấy thông tin người nhận để hiển thị
                 User receiver = userDao.findUserById(inv.getReceiverId());
                 if (receiver != null) {
                     receiver.setPassword(null);
-                    inv.setUserDetails(receiver); // Gán thông tin user vào invite để hiển thị tên/avatar
-                    
-                    // 2. Sửa lỗi ClassCastException: Thêm 'inv' (đối tượng đơn) chứ không phải 'sent' (cả list)
+                    inv.setUserDetails(receiver); 
                     list.add(inv); 
                 }
             }

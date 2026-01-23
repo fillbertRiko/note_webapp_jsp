@@ -17,13 +17,17 @@ import com.mongodb.client.result.UpdateResult;
 
 import model.User;
 
+///make user DAO 
+///cac phuong thuc co ban
+///kiem tra nguoi dung
+///chuc nang tim kiem ban be
 public class UserDao {
 
     private final MongoCollection<Document> users;
 
     public UserDao() {
         MongoDatabase db = DBConnection.getDatabase();
-        this.users = db.getCollection("user"); // Tên collection gốc của bạn là "user"
+        this.users = db.getCollection("user");
     }
 
     private User documentToUser(Document doc) {
@@ -39,8 +43,6 @@ public class UserDao {
             doc.getDate("createdAt")
         );
     }
-
-    // --- CÁC HÀM CƠ BẢN ---
 
     public User findUserById(String id) {
         try {
@@ -77,8 +79,7 @@ public class UserDao {
                     .append("username", user.getUsername())
                     .append("fullname", user.getFullname())
                     .append("email", user.getEmail()));
-            
-            // Chỉ update password nếu có thay đổi
+
             if(user.getPassword() != null && !user.getPassword().isEmpty()){
                 ((Document)updateFields.get("$set")).append("password", user.getPassword());
             }
@@ -141,7 +142,6 @@ public class UserDao {
         }
     }
     
-    // --- [MỚI] HÀM TÌM KIẾM NGƯỜI DÙNG (Dùng cho chức năng Tìm bạn) ---
     public List<User> searchUsers(String keyword) {
         List<User> userList = new ArrayList<>();
         if (keyword == null || keyword.trim().isEmpty()) {
@@ -149,7 +149,6 @@ public class UserDao {
         }
 
         try {
-            // Regex tìm gần đúng, không phân biệt hoa thường (Case Insensitive)
             Pattern pattern = Pattern.compile(".*" + Pattern.quote(keyword) + ".*", Pattern.CASE_INSENSITIVE);
             
             Bson filter = Filters.or(
@@ -158,11 +157,10 @@ public class UserDao {
                 Filters.regex("email", pattern)
             );
 
-            // Giới hạn 20 kết quả để tối ưu hiệu năng
             try (MongoCursor<Document> cursor = users.find(filter).limit(20).iterator()) { 
                 while (cursor.hasNext()) {
                     User u = documentToUser(cursor.next());
-                    u.setPassword(null); // Xóa mật khẩu để bảo mật khi hiển thị ra view
+                    u.setPassword(null);
                     userList.add(u);
                 }
             }
@@ -170,5 +168,25 @@ public class UserDao {
             e.printStackTrace();
         }
         return userList;
+    }
+    public List<User> getPotentialUsers(String currentUserId) {
+        List<User> list = new ArrayList<>();
+        
+        Bson filter = Filters.ne("_id", new ObjectId(currentUserId));
+        
+        try (MongoCursor<Document> cursor = users.find(filter).limit(20).iterator()) {
+            while (cursor.hasNext()) {
+                Document doc = cursor.next();
+                User u = new User();
+                u.setId(doc.getObjectId("_id").toHexString());
+                u.setFullname(doc.getString("fullname"));
+                u.setUsername(doc.getString("username"));
+                u.setEmail(doc.getString("email"));
+                list.add(u);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 }

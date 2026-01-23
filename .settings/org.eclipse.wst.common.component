@@ -1,32 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?><project-modules id="moduleCoreId" project-version="1.5.0">
-                
-    
-    
-    <wb-module deploy-name="note_webapp_jsp-0.0.1-SNAPSHOT">
-                        
-        
-        <wb-resource deploy-path="/" source-path="/target/m2e-wtp/web-resources"/>
-                                
-        
-        
+    <wb-module deploy-name="Nhom_2">
         <wb-resource deploy-path="/" source-path="/src/main/webapp" tag="defaultRootSource"/>
-                                
-        
-        
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/java"/>
-                                
-        
-        
-        <property name="context-root" value="note_webapp_jsp"/>
-                                
-        
-        
-        <property name="java-output-path" value="/note_webapp_jsp/build/classes"/>
-                            
-    
-    
+        <dependent-module archiveName="bson-4.11.1.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/bson-4.11.1/bson-4.11.1">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="jakarta.el-api-5.0.0.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/jakarta.el-api-5.0.0/jakarta.el-api-5.0.0">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="bson-record-codec-4.11.1.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/bson-record-codec-4.11.1/bson-record-codec-4.11.1">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="mongodb-driver-core-4.11.1.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/mongodb-driver-core-4.11.1/mongodb-driver-core-4.11.1">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="jakarta.servlet.jsp.jstl-api-3.0.0.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/jakarta.servlet.jsp.jstl-api-3.0.0/jakarta.servlet.jsp.jstl-api-3.0.0">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="jstl-1.2.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/jstl-1.2/jstl-1.2">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="mongodb-driver-sync-4.11.1.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/mongodb-driver-sync-4.11.1/mongodb-driver-sync-4.11.1">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <property name="context-root" value="Nhom_2"/>
+        <property name="java-output-path" value="/Nhom_2/build/classes"/>
     </wb-module>
-            
-
-
 </project-modules>

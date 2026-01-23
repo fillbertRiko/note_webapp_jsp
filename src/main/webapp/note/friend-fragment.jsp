@@ -35,8 +35,40 @@
 .empty-state { padding: 40px; background: #fff; border-radius: 12px; text-align: center; color: #888; border: 2px dashed #eee; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 </style>
-
 <div class="friend-wrapper animate-fade-in">
+
+    <c:if test="${isOwner && not empty strangerList}">
+        <div class="section-header">
+            <h3 class="title-friend" style="font-size: 18px; color: #007bff;">
+                <i class="fa-solid fa-user-plus"></i> Suggested for you
+            </h3>
+        </div>
+        <div class="friend-grid">
+            <c:forEach var="stranger" items="${strangerList}">
+                <div class="friend-card">
+                    <div class="friend-avatar">
+                        <img src="https://ui-avatars.com/api/?name=${stranger.fullname}&background=random" alt="Avatar">
+                    </div>
+                    <div class="friend-info">
+                        <h4>${stranger.fullname}</h4>
+                        <a href="${pageContext.request.contextPath}/dashboard-note?action=view-wall&_id=${stranger.id}" class="link-wall">@${stranger.username}</a>
+                    </div>
+                    <div class="friend-actions">
+                        <form action="${pageContext.request.contextPath}/dashboard-note" method="POST">
+                            <input type="hidden" name="action" value="send-invite">
+                            <input type="hidden" name="receiverId" value="${stranger.id}">
+                            <button class="btn-action btn-add">
+                                <i class="fa-solid fa-user-plus"></i> Add
+                            </button>
+                        </form>
+                        
+                        <a href="${pageContext.request.contextPath}/dashboard-note?action=view-wall&_id=${stranger.id}" class="btn-action btn-view">View</a>
+                    </div>
+                </div>
+            </c:forEach>
+        </div>
+        <div class="spacer"></div>
+    </c:if>
 
     <c:if test="${isOwner && not empty receivedList}">
         <div class="section-header">
@@ -109,32 +141,74 @@
 
     <c:if test="${empty friendList}">
         <div class="empty-state">
-            <p>No friends found.</p>
+            <p>No friends yet.</p>
         </div>
     </c:if>
 
-    <div class="friend-grid">
-        <c:forEach var="friend" items="${friendList}">
-            <div class="friend-card">
-                <div class="friend-avatar">
-                    <img src="https://ui-avatars.com/api/?name=${friend.fullname}&background=random" alt="Avatar">
+    <c:if test="${not empty friendList}">
+        <div class="friend-grid">
+            <c:forEach var="friend" items="${friendList}">
+                <div class="friend-card">
+                    <div class="friend-avatar">
+                        <img src="https://ui-avatars.com/api/?name=${friend.fullname}&background=random" alt="Avatar">
+                    </div>
+                    <div class="friend-info">
+                        <h4>${friend.fullname}</h4>
+                        <a href="${pageContext.request.contextPath}/dashboard-note?action=view-wall&_id=${friend.id}" class="link-wall">@${friend.username}</a>
+                    </div>
+                    <div class="friend-actions">
+                        <a href="${pageContext.request.contextPath}/dashboard-note?action=view-wall&_id=${friend.id}" class="btn-action btn-view">See friend wall</a>
+                        <c:if test="${isOwner}">
+                            <form action="${pageContext.request.contextPath}/dashboard-note" method="POST" onsubmit="return confirm('Endding this love :(( ${friend.fullname}?');">
+                                <input type="hidden" name="action" value="unfriend"> <input type="hidden" name="friendId" value="${friend.id}">
+                                <button class="btn-action btn-reject" title="Get away from me!!!"><i class="fa-solid fa-user-xmark"></i></button>
+                            </form>
+                        </c:if>
+                    </div>
                 </div>
-                <div class="friend-info">
-                    <h4>${friend.fullname}</h4>
-                    <a href="${pageContext.request.contextPath}/dashboard-note?action=view-wall&_id=${friend.id}" class="link-wall">@${friend.username}</a>
-                </div>
-                <div class="friend-actions">
-                    <a href="${pageContext.request.contextPath}/dashboard-note?action=view-wall&_id=${friend.id}" class="btn-action btn-view">View Wall</a>
-                    
-                    <c:if test="${isOwner}">
-                        <form action="${pageContext.request.contextPath}/dashboard-note" method="POST" onsubmit="return confirm('Unfriend ${friend.fullname}?');">
-                            <input type="hidden" name="action" value="unfriend">
-                            <input type="hidden" name="friendId" value="${friend.id}">
-                            <button class="btn-action btn-reject" title="Unfriend"><i class="fa-solid fa-user-xmark"></i></button>
+            </c:forEach>
+        </div>
+    </c:if>
+
+    <c:if test="${empty friendList}">
+        
+        <div class="empty-state" style="margin-bottom: 30px; border: none; padding-bottom: 0;">
+            <p style="font-size: 15px; color: #555;">You don't have any friend. Let's make a new friend!</p>
+        </div>
+
+        <div class="section-header" style="border: none; margin-top: 0;">
+            <h3 style="font-size: 16px; color: #007bff; text-transform: uppercase; letter-spacing: 1px;">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Suggest for you only.
+            </h3>
+        </div>
+
+        <div class="friend-grid">
+            <c:forEach var="stranger" items="${suggestionList}">
+                <div class="friend-card" style="border-top: 3px solid #007bff;">
+                    <div class="friend-avatar">
+                        <img src="https://ui-avatars.com/api/?name=${stranger.fullname}&background=random" alt="Avatar">
+                    </div>
+                    <div class="friend-info">
+                        <h4>${stranger.fullname}</h4>
+                        <span style="font-size: 12px; color: #888;">Maybe you know</span>
+                    </div>
+                    <div class="friend-actions">
+                        <form action="${pageContext.request.contextPath}/dashboard-note" method="POST" style="width: 100%;">
+                            <input type="hidden" name="action" value="send-invite">
+                            <input type="hidden" name="receiverId" value="${stranger.id}">
+                            <button type="submit" class="btn-action btn-accept" style="background: #007bff; color: white;">
+                                <i class="fa-solid fa-user-plus"></i> Add friend
+                            </button>
                         </form>
-                    </c:if>
+                    </div>
                 </div>
+            </c:forEach>
+        </div>
+        
+        <c:if test="${empty suggestionList}">
+             <div class="empty-state">
+                <p>No one in here.</p>
             </div>
-        </c:forEach>
-    </div>
+        </c:if>
+    </c:if>
 </div>

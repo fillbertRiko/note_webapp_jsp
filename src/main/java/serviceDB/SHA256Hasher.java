@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+///make hash pass
 public class SHA256Hasher {
 	public static String hash(String rawPassword) {
 		if (rawPassword == null) {
